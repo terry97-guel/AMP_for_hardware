@@ -17,9 +17,9 @@ import pybullet
 import pybullet_data as pd
 
 from datasets.retarget_utils import *
-import datasets.retarget_config_a1 as config
+# import datasets.retarget_config_a1 as config
 # import datasets.retarget_config_go1_hopturn as config
-# import datasets.retarget_config_a1_hopturn as config
+import datasets.retarget_config_a1_hopturn as config
 
 POS_SIZE = 3
 ROT_SIZE = 4

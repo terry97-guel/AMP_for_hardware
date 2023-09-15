@@ -44,5 +44,4 @@ def train(args):
 
 if __name__ == '__main__':
     args = get_args()
-    args.task = "go1_amp"
     train(args)
