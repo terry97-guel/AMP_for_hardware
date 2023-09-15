@@ -11,7 +11,7 @@ OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/hopturn_a1".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
 REF_POS_SCALE = 0.825
-INIT_POS = np.array([0, 0, 0.27])
+INIT_POS = np.array([0, 0, 0.32])
 INIT_ROT = np.array([0, 0, 0, 1.0])
 
 SIM_TOE_JOINT_IDS = [6, 11, 16, 21]
