@@ -119,19 +119,19 @@ class GO1HOPCfg( LeggedRobotCfg ):
             termination = 0.0
             tracking_lin_vel = 0
             tracking_ang_vel = 0
-            lin_vel_z = 0.0
-            ang_vel_xy = 0.0
-            orientation = 0.0
-            torques = 0.0
-            dof_vel = 0.0
-            dof_acc = 0.0
-            base_height = 0.0
-            feet_air_time =  0.0
-            collision = 0.0
-            feet_stumble = 0.0
-            action_rate = 0.0
-            stand_still = 0.0
-            dof_pos_limits = 0.0
+            lin_vel_z = 0.0      # penalize vertical velocity           
+            ang_vel_xy = 0.0     # penalize horizontal angular velocity
+            orientation = 0.0    # penalize orientation error            
+            torques = 0.0        # penalize torques                        
+            dof_vel = 0.0        # penalize joint velocities               
+            dof_acc = 0.0        # penalize joint accelerations               
+            base_height = 0.0    # penalize base height                               
+            feet_air_time =  0.0 # penalize feet air time                          
+            collision = 0.0      # penalize collisions                   
+            feet_stumble = 0.0   # penalize feet stumble                    
+            action_rate = 0.0    # penalize change in action                 
+            stand_still = 0.0    # penalize standing still                     
+            dof_pos_limits = 0.0 # penalize joint position limits               
 
     class commands:
         curriculum = False
