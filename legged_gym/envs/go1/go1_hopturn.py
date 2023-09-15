@@ -34,7 +34,7 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 MOTION_FILES = glob.glob('datasets/hopturn_a1/*')
 
 
-class A1HOPCfg( LeggedRobotCfg ):
+class GO1HOPCfg( LeggedRobotCfg ):
 
     class env( LeggedRobotCfg.env ):
         num_envs = 5480
@@ -48,25 +48,23 @@ class A1HOPCfg( LeggedRobotCfg ):
         get_commands_from_joystick = False
 
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.42] # x,y,z [m]
-        default_joint_angles = { # = target angles [rad] when action = 0.0
-            'leg0_FL_a_hip_joint': -0.15,   # [rad]
-            'leg0_FL_c_thigh_joint': 0.55,     # [rad]
-            'leg0_FL_d_calf_joint': -1.5,   # [rad]
+        pos = [0.0, 0.0, 0.34] # x,y,z [m]
+        default_joint_angles = {  # = target angles [rad] when action = 0.0
+            'FL_hip_joint': 0.1,  # [rad]
+            'RL_hip_joint': 0.1,  # [rad]
+            'FR_hip_joint': -0.1,  # [rad]
+            'RR_hip_joint': -0.1,  # [rad]
 
-            'leg1_FR_a_hip_joint': 0.15,  # [rad]
-            'leg1_FR_c_thigh_joint': 0.55,     # [rad]
-            'leg1_FR_d_calf_joint': -1.5,  # [rad]
+            'FL_thigh_joint': 0.8,  # [rad]
+            'RL_thigh_joint': 1.,  # [rad]
+            'FR_thigh_joint': 0.8,  # [rad]
+            'RR_thigh_joint': 1.,  # [rad]
 
-            'leg2_RL_a_hip_joint': -0.15,   # [rad]
-            'leg2_RL_c_thigh_joint': 0.7,   # [rad]
-            'leg2_RL_d_calf_joint': -1.5,    # [rad]
-
-            'leg3_RR_a_hip_joint': 0.15,   # [rad]
-            'leg3_RR_c_thigh_joint': 0.7,   # [rad]
-            'leg3_RR_d_calf_joint': -1.5,    # [rad]
+            'FL_calf_joint': -1.5,  # [rad]
+            'RL_calf_joint': -1.5,  # [rad]
+            'FR_calf_joint': -1.5,  # [rad]
+            'RR_calf_joint': -1.5  # [rad]
         }
-
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
         control_type = 'P'
@@ -82,13 +80,14 @@ class A1HOPCfg( LeggedRobotCfg ):
         measure_heights = False
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/go1/urdf/go1.urdf'
         foot_name = "foot"
         penalize_contacts_on = ["thigh", "calf"]
         terminate_after_contacts_on = [
             "base", "FL_calf", "FR_calf", "RL_calf", "RR_calf",
             "FL_thigh", "FR_thigh", "RL_thigh", "RR_thigh"]
         self_collisions = 0 # 1 to disable, 0 to enable...bitwise filter
+        flip_visual_attachments = False
 
     class domain_rand:
         randomize_friction = True
@@ -141,12 +140,12 @@ class A1HOPCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-1.0, 2.0] # min max [m/s]
-            lin_vel_y = [-0.3, 0.3]   # min max [m/s]
-            ang_vel_yaw = [-1.57, 1.57]    # min max [rad/s]
-            heading = [-3.14, 3.14]
+            lin_vel_x = [0,0] # min max [m/s]
+            lin_vel_y = [0,0]   # min max [m/s]
+            ang_vel_yaw = [0,0]    # min max [rad/s]
+            heading = [0,0]
 
-class A1HOPCfgPPO( LeggedRobotCfgPPO ):
+class GO1HOPCfgPPO( LeggedRobotCfgPPO ):
     runner_class_name = 'AMPOnPolicyRunner'
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
@@ -156,7 +155,7 @@ class A1HOPCfgPPO( LeggedRobotCfgPPO ):
 
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'a1_hopturn_example'
+        experiment_name = 'go1_hopturn_example'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
         max_iterations = 500000 # number of policy updates

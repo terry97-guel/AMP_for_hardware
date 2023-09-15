@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/hopturn/*')
+MOTION_FILES = glob.glob('datasets/mocap_motions_a1/*')
 
 
 class GO1AMPCfg( LeggedRobotCfg ):
