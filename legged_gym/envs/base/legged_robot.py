@@ -1102,13 +1102,41 @@ class LeggedRobot(BaseTask):
 
     def _reward_dof_pos_motion(self):
         # reward for qpos motion
+        
+
+        self.times = np.clip(self.times, 0, self.amp_loader.trajectory_lens[0] - self.amp_loader.trajectory_frame_durations[0])
+        
+        frames = self.amp_loader.get_full_frame_at_time_batch(self.traj_idxs, self.times)
+        frames = frames.to(self.device)
+        dof_pos = AMPLoader.get_joint_pose_batch(frames)
+        return torch.sum(torch.square(dof_pos - self.dof_pos), dim=1)
+
+    def _reward_dof_vel_motion(self):
+        # reward for qvel motion
         self.times = np.clip(self.times, 0, self.amp_loader.trajectory_lens[0] - self.amp_loader.trajectory_frame_durations[0])
         
         frames = self.amp_loader.get_full_frame_at_time_batch(self.traj_idxs, self.times)
         frames = frames.to(self.device)
         
-        qpos = frames[:, self.amp_loader.JOINT_POSE_START_IDX:self.amp_loader.JOINT_POSE_END_IDX]
+        dof_vel = AMPLoader.get_joint_vel_batch(frames)
+        return torch.sum(torch.square(dof_vel - self.dof_vel), dim=1)
+    
+    def _reward_lin_vel_motion(self):
+        # reward for qvel motion
+        self.times = np.clip(self.times, 0, self.amp_loader.trajectory_lens[0] - self.amp_loader.trajectory_frame_durations[0])
         
-        return torch.sum(torch.square(qpos - self.dof_pos), dim=1)
-
+        frames = self.amp_loader.get_full_frame_at_time_batch(self.traj_idxs, self.times)
+        frames = frames.to(self.device)
         
+        lin_vel = AMPLoader.get_linear_vel_batch(frames)
+        return torch.sum(torch.square(lin_vel - self.base_lin_vel), dim=1)
+    
+    def _reward_ang_vel_motion(self):
+        # reward for qvel motion
+        self.times = np.clip(self.times, 0, self.amp_loader.trajectory_lens[0] - self.amp_loader.trajectory_frame_durations[0])
+        
+        frames = self.amp_loader.get_full_frame_at_time_batch(self.traj_idxs, self.times)
+        frames = frames.to(self.device)
+        
+        ang_vel = AMPLoader.get_angular_vel_batch(frames)
+        return torch.sum(torch.square(ang_vel - self.base_ang_vel), dim=1)
