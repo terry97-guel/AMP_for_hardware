@@ -117,6 +117,11 @@ class A1HOPCfg( LeggedRobotCfg ):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.25
         class scales( LeggedRobotCfg.rewards.scales ):
+            dof_pos_motion = 2
+            # dof_vel_motion = 0.1
+            # lin_vel_motion = 40
+            # ang_vel_motion = 10
+            
             termination = 0.0
             tracking_lin_vel = 0  
             tracking_ang_vel = 0  

@@ -89,14 +89,15 @@ class LeggedRobot(BaseTask):
           self._p1.init()
           print(f"Loaded joystick with {self._p1.get_numaxes()} axes.")
 
+        if self.cfg.env.reference_state_initialization:
+            self.amp_loader = AMPLoader(motion_files=self.cfg.env.amp_motion_files, device=self.device, time_between_frames=self.dt)
+
         if not self.headless:
             self.set_camera(self.cfg.viewer.pos, self.cfg.viewer.lookat)
         self._init_buffers()
         self._prepare_reward_function()
         self.init_done = True
 
-        if self.cfg.env.reference_state_initialization:
-            self.amp_loader = AMPLoader(motion_files=self.cfg.env.amp_motion_files, device=self.device, time_between_frames=self.dt)
 
     def reset(self):
         """ Reset all robots"""
@@ -126,6 +127,7 @@ class LeggedRobot(BaseTask):
                 self.gym.fetch_results(self.sim, True)
             self.gym.refresh_dof_state_tensor(self.sim)
         reset_env_ids, terminal_amp_states = self.post_physics_step()
+        self.times += self.dt
 
         # return clipped obs, clipped states (None), rewards, dones and infos
         clip_obs = self.cfg.normalization.clip_observations
@@ -170,6 +172,8 @@ class LeggedRobot(BaseTask):
         # compute observations, rewards, resets, ...
         self.check_termination()
         self.compute_reward()
+        time_end_mask = self.times>= self.amp_loader.trajectory_frame_durations[0]
+        self.reset_buf[time_end_mask] = True
         env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
         terminal_amp_states = self.get_amp_observations()[env_ids]
         self.reset_idx(env_ids)
@@ -212,7 +216,19 @@ class LeggedRobot(BaseTask):
 
         # reset robot states
         if self.cfg.env.reference_state_initialization:
-            frames = self.amp_loader.get_full_frame_batch(len(env_ids))
+            
+            num_frames = len(env_ids)
+            traj_idxs = self.amp_loader.weighted_traj_idx_sample_batch(num_frames)
+            times = self.amp_loader.traj_time_sample_batch(traj_idxs)
+            frames = self.amp_loader.get_full_frame_at_time_batch(traj_idxs, times)
+            
+            # self.traj_idxs[env_ids] = torch.tensor(traj_idxs, device=self.device)
+            # self.times[env_ids]     = torch.tensor(times, device=self.device)
+
+            self.traj_idxs[env_ids.cpu().numpy()] = traj_idxs
+            self.times[env_ids.cpu().numpy()]     =  times
+            
+
             self._reset_dofs_amp(env_ids, frames)
             self._reset_root_states_amp(env_ids, frames)
         else:
@@ -670,6 +686,16 @@ class LeggedRobot(BaseTask):
         self.base_lin_vel = quat_rotate_inverse(self.base_quat, self.root_states[:, 7:10])
         self.base_ang_vel = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
+        
+        
+        # define frames
+        num_frames = self.num_envs
+        traj_idxs = self.amp_loader.weighted_traj_idx_sample_batch(num_frames)
+        times = self.amp_loader.traj_time_sample_batch(traj_idxs)
+        
+        self.traj_idxs = traj_idxs
+        self.times     = times
+
         if self.cfg.terrain.measure_heights:
             self.height_points = self._init_height_points()
         self.measured_heights = 0
@@ -1073,3 +1099,17 @@ class LeggedRobot(BaseTask):
     def _reward_feet_contact_forces(self):
         # penalize high contact forces
         return torch.sum((torch.norm(self.contact_forces[:, self.feet_indices, :], dim=-1) -  self.cfg.rewards.max_contact_force).clip(min=0.), dim=1)
+
+    def _reward_dof_pos_motion(self):
+        # reward for qpos motion
+        
+        # self.times = np.clip(self.times, 0, self.amp_loader.trajectory_frame_durations[0])
+        
+        frames = self.amp_loader.get_full_frame_at_time_batch(self.traj_idxs, self.times)
+        frames = frames.to(self.device)
+        
+        qpos = frames[:, self.amp_loader.JOINT_POSE_START_IDX:self.amp_loader.JOINT_POSE_END_IDX]
+        
+        return torch.sum(torch.square(qpos - self.dof_pos), dim=1)
+
+        
