@@ -172,7 +172,7 @@ class LeggedRobot(BaseTask):
         # compute observations, rewards, resets, ...
         self.check_termination()
         self.compute_reward()
-        time_end_mask = self.times>= self.amp_loader.trajectory_frame_durations[0]
+        time_end_mask = self.times>= self.amp_loader.trajectory_lens[0] - self.amp_loader.trajectory_frame_durations[0]
         self.reset_buf[time_end_mask] = True
         env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
         terminal_amp_states = self.get_amp_observations()[env_ids]
@@ -1102,8 +1102,7 @@ class LeggedRobot(BaseTask):
 
     def _reward_dof_pos_motion(self):
         # reward for qpos motion
-        
-        # self.times = np.clip(self.times, 0, self.amp_loader.trajectory_frame_durations[0])
+        self.times = np.clip(self.times, 0, self.amp_loader.trajectory_lens[0] - self.amp_loader.trajectory_frame_durations[0])
         
         frames = self.amp_loader.get_full_frame_at_time_batch(self.traj_idxs, self.times)
         frames = frames.to(self.device)
