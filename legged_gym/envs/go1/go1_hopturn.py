@@ -39,8 +39,8 @@ class GO1HOPCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env ):
         num_envs = 5480
         include_history_steps = None  # Number of steps of history to include.
-        num_observations = 42
-        num_privileged_obs = 48
+        num_observations = 43
+        num_privileged_obs = 49
         reference_state_initialization = True
         reference_state_initialization_prob = 0.85
         amp_motion_files = MOTION_FILES
@@ -116,11 +116,12 @@ class GO1HOPCfg( LeggedRobotCfg ):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.25
         class scales( LeggedRobotCfg.rewards.scales ):
+            pos_motion = 1e-2
+            ang_motion = 0.5
             dof_pos_motion = 2
-            dof_vel_motion = 0.1
-            lin_vel_motion = 40
-            ang_vel_motion = 10
-            torques = -0.002
+            # dof_vel_motion = 1e-2
+            # lin_vel_motion = 4
+            # ang_vel_motion = 1
             
             termination = 0.0
             tracking_lin_vel = 0
@@ -128,7 +129,7 @@ class GO1HOPCfg( LeggedRobotCfg ):
             lin_vel_z = 0.0      # penalize vertical velocity           
             ang_vel_xy = 0.0     # penalize horizontal angular velocity
             orientation = 0.0    # penalize orientation error            
-            torques = 0.0        # penalize torques                        
+            torques = -0.002     # penalize torques                        
             dof_vel = 0.0        # penalize joint velocities               
             dof_acc = 0.0        # penalize joint accelerations               
             base_height = 0.0    # penalize base height                               

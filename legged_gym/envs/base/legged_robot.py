@@ -99,9 +99,9 @@ class LeggedRobot(BaseTask):
         self.init_done = True
 
 
-    def reset(self):
+    def reset(self, random_time=True):
         """ Reset all robots"""
-        self.reset_idx(torch.arange(self.num_envs, device=self.device))
+        self.reset_idx(torch.arange(self.num_envs, device=self.device), random_time=random_time)
         if self.cfg.env.include_history_steps is not None:
             self.obs_buf_history.reset(
                 torch.arange(self.num_envs, device=self.device),
@@ -195,7 +195,7 @@ class LeggedRobot(BaseTask):
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
         self.reset_buf |= self.time_out_buf
 
-    def reset_idx(self, env_ids):
+    def reset_idx(self, env_ids, random_time = True):
         """ Reset some environments.
             Calls self._reset_dofs(env_ids), self._reset_root_states(env_ids), and self._resample_commands(env_ids)
             [Optional] calls self._update_terrain_curriculum(env_ids), self.update_command_curriculum(env_ids) and
@@ -219,7 +219,10 @@ class LeggedRobot(BaseTask):
             
             num_frames = len(env_ids)
             traj_idxs = self.amp_loader.weighted_traj_idx_sample_batch(num_frames)
-            times = self.amp_loader.traj_time_sample_batch(traj_idxs)
+            if random_time:
+                times = self.amp_loader.traj_time_sample_batch(traj_idxs)
+            else:
+                times = np.zeros(num_frames)
             frames = self.amp_loader.get_full_frame_at_time_batch(traj_idxs, times)
             
             # self.traj_idxs[env_ids] = torch.tensor(traj_idxs, device=self.device)
@@ -309,14 +312,16 @@ class LeggedRobot(BaseTask):
             self.commands[:, 1] = lin_vel_y
             self.commands[:, 2] = ang_vel
 
-        self.privileged_obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
-                                    self.base_ang_vel  * self.obs_scales.ang_vel,
-                                    self.projected_gravity,
-                                    self.commands[:, :3] * self.commands_scale,
-                                    (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
-                                    self.dof_vel * self.obs_scales.dof_vel,
-                                    self.actions
-                                    ),dim=-1)
+        self.privileged_obs_buf = torch.cat((   
+            self.base_lin_vel * self.obs_scales.lin_vel,
+            self.base_ang_vel  * self.obs_scales.ang_vel,
+            self.projected_gravity,
+            self.commands[:, :3] * self.commands_scale,
+            (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
+            self.dof_vel * self.obs_scales.dof_vel,
+            self.actions,
+            torch.tensor(self.times, device=self.device, dtype=torch.float32).reshape(-1,1),
+            ),dim=-1)
         # add perceptive inputs if not blind
         if self.cfg.terrain.measure_heights:
             heights = torch.clip(self.root_states[:, 2].unsqueeze(1) - 0.5 - self.measured_heights, -1, 1.) * self.obs_scales.height_measurements
@@ -641,6 +646,7 @@ class LeggedRobot(BaseTask):
         noise_vec[12:24] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
         noise_vec[24:36] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
         noise_vec[36:48] = 0. # previous actions
+        noise_vec[48]    = self.dt
         if self.cfg.terrain.measure_heights:
             noise_vec[48:235] = noise_scales.height_measurements* noise_level * self.obs_scales.height_measurements
         return noise_vec
@@ -666,6 +672,14 @@ class LeggedRobot(BaseTask):
 
         self.contact_forces = gymtorch.wrap_tensor(net_contact_forces).view(self.num_envs, -1, 3) # shape: num_envs, num_bodies, xyz axis
 
+        # define frames
+        num_frames = self.num_envs
+        traj_idxs = self.amp_loader.weighted_traj_idx_sample_batch(num_frames)
+        times = self.amp_loader.traj_time_sample_batch(traj_idxs)
+        
+        self.traj_idxs = traj_idxs
+        self.times     = times
+
         # initialize some data used later on
         self.common_step_counter = 0
         self.extras = {}
@@ -687,14 +701,6 @@ class LeggedRobot(BaseTask):
         self.base_ang_vel = quat_rotate_inverse(self.base_quat, self.root_states[:, 10:13])
         self.projected_gravity = quat_rotate_inverse(self.base_quat, self.gravity_vec)
         
-        
-        # define frames
-        num_frames = self.num_envs
-        traj_idxs = self.amp_loader.weighted_traj_idx_sample_batch(num_frames)
-        times = self.amp_loader.traj_time_sample_batch(traj_idxs)
-        
-        self.traj_idxs = traj_idxs
-        self.times     = times
 
         if self.cfg.terrain.measure_heights:
             self.height_points = self._init_height_points()
@@ -1140,3 +1146,36 @@ class LeggedRobot(BaseTask):
         
         ang_vel = AMPLoader.get_angular_vel_batch(frames)
         return torch.sum(torch.square(ang_vel - self.base_ang_vel), dim=1)
+
+    def _reward_pos_motion(self):
+        # reward for root pos
+        self.times = np.clip(self.times, 0, self.amp_loader.trajectory_lens[0] - self.amp_loader.trajectory_frame_durations[0])
+        
+        frames = self.amp_loader.get_full_frame_at_time_batch(self.traj_idxs, self.times)
+        frames = frames.to(self.device)
+        
+        root_pos = AMPLoader.get_root_pos_batch(frames)
+        return torch.sum(torch.square(root_pos - self.root_states[:, 0:3]), dim=1)
+
+    def _reward_ang_motion(self):
+        # reward for root ang
+        self.times = np.clip(self.times, 0, self.amp_loader.trajectory_lens[0] - self.amp_loader.trajectory_frame_durations[0])
+        
+        frames = self.amp_loader.get_full_frame_at_time_batch(self.traj_idxs, self.times)
+        frames = frames.to(self.device)
+        
+        root_rot = AMPLoader.get_root_rot_batch(frames)
+        root_rot_cur= self.root_states[:,3:7]
+
+        inner_product = torch.sum(root_rot_cur * root_rot, dim=1)
+        return 1 - inner_product ** 2
+
+    def update(self):
+        self.gym.simulate(self.sim)
+        self.gym.fetch_results(self.sim, True)
+        self.gym.refresh_dof_state_tensor(self.sim)
+        self.gym.refresh_actor_root_state_tensor(self.sim)
+        self.gym.refresh_net_contact_force_tensor(self.sim)
+        self.gym.refresh_rigid_body_state_tensor(self.sim)
+        self.gym.render_all_camera_sensors(self.sim)
+        self.render()

@@ -39,8 +39,8 @@ class A1HOPCfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env ):
         num_envs = 5480
         include_history_steps = None  # Number of steps of history to include.
-        num_observations = 42
-        num_privileged_obs = 48
+        num_observations = 43
+        num_privileged_obs = 49
         reference_state_initialization = True
         reference_state_initialization_prob = 0.85
         amp_motion_files = MOTION_FILES
@@ -117,11 +117,13 @@ class A1HOPCfg( LeggedRobotCfg ):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.25
         class scales( LeggedRobotCfg.rewards.scales ):
+            pos_motion = 2
+            ang_motion = 0.5
             dof_pos_motion = 2
-            dof_vel_motion = 0.1
-            lin_vel_motion = 40
-            ang_vel_motion = 10
-            torques = -0.002
+
+            # dof_vel_motion = 1e-2
+            # lin_vel_motion = 4
+            # ang_vel_motion = 1
 
             termination = 0.0
             tracking_lin_vel = 0  
@@ -129,9 +131,9 @@ class A1HOPCfg( LeggedRobotCfg ):
             lin_vel_z = 0.0      # penalize vertical velocity           
             ang_vel_xy = 0.0     # penalize horizontal angular velocity
             orientation = 0.0    # penalize orientation error            
-            torques = 0.0        # penalize torques                        
-            dof_vel = 0.0        # penalize joint velocities               
-            dof_acc = 0.0        # penalize joint accelerations               
+            torques = -0.02     # penalize torques                        
+            # dof_vel = -0.005         # penalize joint velocities               
+            # dof_acc = -0.001        # penalize joint accelerations               
             base_height = 0.0    # penalize base height                               
             feet_air_time =  0.0 # penalize feet air time                          
             collision = 0.0      # penalize collisions                   
@@ -151,6 +153,16 @@ class A1HOPCfg( LeggedRobotCfg ):
             lin_vel_y = [-0.3, 0.3]   # min max [m/s]
             ang_vel_yaw = [-1.57, 1.57]    # min max [rad/s]
             heading = [-3.14, 3.14]
+
+    class normalization:
+        class obs_scales:
+            lin_vel = 2.0
+            ang_vel = 0.25
+            dof_pos = 1.0
+            dof_vel = 0.05
+            height_measurements = 5.0
+        clip_observations = 100.
+        clip_actions = 1.
 
 class A1HOPCfgPPO( LeggedRobotCfgPPO ):
     runner_class_name = 'AMPOnPolicyRunner'

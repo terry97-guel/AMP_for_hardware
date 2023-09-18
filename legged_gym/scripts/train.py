@@ -44,5 +44,12 @@ def train(args):
 
 if __name__ == '__main__':
     args = get_args()
-    args.task = "a1_hopturn"
+    
+    DEBUG = False
+    # DEBUG = True
+    if DEBUG:
+        args.task = "a1_hopturn"
+        for _ in range(100):
+            print('WARNING: DEBUG MODE')
+        
     train(args)
