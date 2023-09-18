@@ -135,8 +135,8 @@ class A1HOPCfgVel( LeggedRobotCfg ):
             lin_vel_z = 0.0      # penalize vertical velocity           
             ang_vel_xy = 0.0     # penalize horizontal angular velocity
             orientation = 0.0    # penalize orientation error            
-            torques = -0.002     # penalize torques                        
-            dof_vel = -0.001        # penalize joint velocities               
+            torques = -0.0002     # penalize torques                        
+            dof_vel = -0.0001        # penalize joint velocities               
             dof_acc = 0.0        # penalize joint accelerations               
             base_height = 0.0    # penalize base height                               
             feet_air_time =  0.0 # penalize feet air time                          
