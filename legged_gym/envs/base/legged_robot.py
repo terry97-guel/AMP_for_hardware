@@ -195,7 +195,7 @@ class LeggedRobot(BaseTask):
         self.time_out_buf = self.episode_length_buf > self.max_episode_length # no terminal reward for time-outs
         self.reset_buf |= self.time_out_buf
 
-    def reset_idx(self, env_ids, random_time = True):
+    def reset_idx(self, env_ids, random_time = False):
         """ Reset some environments.
             Calls self._reset_dofs(env_ids), self._reset_root_states(env_ids), and self._resample_commands(env_ids)
             [Optional] calls self._update_terrain_curriculum(env_ids), self.update_command_curriculum(env_ids) and
@@ -1108,14 +1108,13 @@ class LeggedRobot(BaseTask):
 
     def _reward_dof_pos_motion(self):
         # reward for qpos motion
-        
-
         self.times = np.clip(self.times, 0, self.amp_loader.trajectory_lens[0] - self.amp_loader.trajectory_frame_durations[0])
         
         frames = self.amp_loader.get_full_frame_at_time_batch(self.traj_idxs, self.times)
         frames = frames.to(self.device)
         dof_pos = AMPLoader.get_joint_pose_batch(frames)
-        return torch.sum(torch.square(dof_pos - self.dof_pos), dim=1)
+        dof_pos_error = torch.sum(torch.square(dof_pos - self.dof_pos), dim=1)
+        return torch.exp(-0.02 * dof_pos_error)
 
     def _reward_dof_vel_motion(self):
         # reward for qvel motion
@@ -1125,7 +1124,8 @@ class LeggedRobot(BaseTask):
         frames = frames.to(self.device)
         
         dof_vel = AMPLoader.get_joint_vel_batch(frames)
-        return torch.sum(torch.square(dof_vel - self.dof_vel), dim=1)
+        dof_vel_error = torch.sum(torch.square(dof_vel - self.dof_vel), dim=1)
+        return torch.exp(-0.0005 * dof_vel_error)
     
     def _reward_lin_vel_motion(self):
         # reward for qvel motion
@@ -1135,7 +1135,8 @@ class LeggedRobot(BaseTask):
         frames = frames.to(self.device)
         
         lin_vel = AMPLoader.get_linear_vel_batch(frames)
-        return torch.sum(torch.square(lin_vel - self.base_lin_vel), dim=1)
+        lin_vel_error = torch.sum(torch.square(lin_vel - self.base_lin_vel), dim=1)
+        return torch.exp(-0.01 * lin_vel_error)
     
     def _reward_ang_vel_motion(self):
         # reward for qvel motion
@@ -1145,7 +1146,8 @@ class LeggedRobot(BaseTask):
         frames = frames.to(self.device)
         
         ang_vel = AMPLoader.get_angular_vel_batch(frames)
-        return torch.sum(torch.square(ang_vel - self.base_ang_vel), dim=1)
+        ang_vel_error = torch.sum(torch.square(ang_vel - self.base_ang_vel), dim=1)
+        return torch.exp(-0.005 * ang_vel_error)
 
     def _reward_pos_motion(self):
         # reward for root pos
@@ -1155,7 +1157,9 @@ class LeggedRobot(BaseTask):
         frames = frames.to(self.device)
         
         root_pos = AMPLoader.get_root_pos_batch(frames)
-        return torch.sum(torch.square(root_pos - self.root_states[:, 0:3]), dim=1)
+        root_pos[:,:2] += self.env_origins[:, :2]
+        root_pos_error = torch.sum(torch.square(root_pos - self.root_states[:, 0:3]), dim=1)
+        return torch.exp(-1 * root_pos_error)
 
     def _reward_ang_motion(self):
         # reward for root ang
@@ -1168,7 +1172,8 @@ class LeggedRobot(BaseTask):
         root_rot_cur= self.root_states[:,3:7]
 
         inner_product = torch.sum(root_rot_cur * root_rot, dim=1)
-        return 1 - inner_product ** 2
+        ang_error =  1 - inner_product ** 2
+        return torch.exp(-1 * ang_error)
 
     def update(self):
         self.gym.simulate(self.sim)

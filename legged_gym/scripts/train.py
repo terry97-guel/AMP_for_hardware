@@ -48,7 +48,7 @@ if __name__ == '__main__':
     DEBUG = False
     # DEBUG = True
     if DEBUG:
-        args.task = "a1_hopturn"
+        # args.task = "a1_hopturn_vel"
         for _ in range(100):
             print('WARNING: DEBUG MODE')
         

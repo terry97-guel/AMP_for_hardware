@@ -121,13 +121,13 @@ class A1HOPCfgVel( LeggedRobotCfg ):
         max_contact_force = 100. # forces above this value are penalized
         base_height_target = 0.25
         class scales( LeggedRobotCfg.rewards.scales ):
-            pos_motion = 1e-3
-            ang_motion = 50
-            dof_pos_motion = 2
+            pos_motion = 150
+            ang_motion = 150
+            dof_pos_motion = 150
 
-            dof_vel_motion = 1e-2
-            lin_vel_motion = 4
-            ang_vel_motion = 0.2
+            dof_vel_motion = 150
+            lin_vel_motion = 150
+            ang_vel_motion = 150
 
             termination = 0.0
             tracking_lin_vel = 0  
@@ -153,10 +153,10 @@ class A1HOPCfgVel( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-1.0, 2.0] # min max [m/s]
-            lin_vel_y = [-0.3, 0.3]   # min max [m/s]
-            ang_vel_yaw = [-1.57, 1.57]    # min max [rad/s]
-            heading = [-3.14, 3.14]
+            lin_vel_x = [0, 0] # min max [m/s]
+            lin_vel_y = [0, 0]   # min max [m/s]
+            ang_vel_yaw = [0, 0]    # min max [rad/s]
+            heading = [0, 0]
 
 class A1HOPCfgVelPPO( LeggedRobotCfgPPO ):
     runner_class_name = 'AMPOnPolicyRunner'
@@ -173,7 +173,7 @@ class A1HOPCfgVelPPO( LeggedRobotCfgPPO ):
         policy_class_name = 'ActorCritic'
         max_iterations = 500000 # number of policy updates
 
-        amp_reward_coef = 2.0
+        amp_reward_coef = 2
         amp_motion_files = MOTION_FILES
         amp_num_preload_transitions = 2000000
         amp_task_reward_lerp = 0.3
