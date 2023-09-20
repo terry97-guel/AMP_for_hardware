@@ -7,7 +7,7 @@ VISUALIZE_RETARGETING = True
 URDF_FILENAME = "{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
-OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/hopturn_a1".format(
+OUTPUT_DIR = "{LEGGED_GYM_ROOT_DIR}/datasets/hopturn_a1_timed".format(
     LEGGED_GYM_ROOT_DIR=LEGGED_GYM_ROOT_DIR)
 
 REF_POS_SCALE = 0.825

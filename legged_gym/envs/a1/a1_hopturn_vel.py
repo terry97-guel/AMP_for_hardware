@@ -31,7 +31,7 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/hopturn_a1/*')
+MOTION_FILES = glob.glob('datasets/hopturn_a1_timed/*')
 
 
 class A1HOPCfgVel( LeggedRobotCfg ):
