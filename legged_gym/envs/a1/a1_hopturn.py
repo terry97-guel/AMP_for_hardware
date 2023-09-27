@@ -31,7 +31,9 @@ import glob
 
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/hopturn_a1/*')
+# MOTION_FILES = glob.glob('datasets/hopturn_a1/*')
+# MOTION_FILES = glob.glob('datasets/hopturn_a1_timed/*')
+MOTION_FILES = glob.glob('datasets/hopturn_a1_mpc/*')
 
 
 class A1HOPCfg( LeggedRobotCfg ):
@@ -119,7 +121,7 @@ class A1HOPCfg( LeggedRobotCfg ):
         class scales( LeggedRobotCfg.rewards.scales ):
             pos_motion = 2
             ang_motion = 0.5
-            dof_pos_motion = 2
+            # dof_pos_motion = 2
 
             # dof_vel_motion = 1e-2
             # lin_vel_motion = 4
@@ -174,7 +176,7 @@ class A1HOPCfgPPO( LeggedRobotCfgPPO ):
 
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'a1_hopturn_example'
+        experiment_name = 'a1_hopturn_pos'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
         max_iterations = 500000 # number of policy updates
