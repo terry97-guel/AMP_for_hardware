@@ -499,8 +499,16 @@ class LeggedRobot(BaseTask):
             p_gains = self.p_gains
             d_gains = self.d_gains
 
+        self.times = np.clip(self.times, 0, self.amp_loader.trajectory_lens[0] - self.amp_loader.trajectory_frame_durations[0])
+        
+        frames = self.amp_loader.get_full_frame_at_time_batch(self.traj_idxs, self.times)
+        frames = frames.to(self.device)
+        
+        target_dof_pos = AMPLoader.get_joint_pose_batch(frames)
+
         if control_type=="P":
-            torques = p_gains*(actions_scaled + self.default_dof_pos - self.dof_pos) - d_gains*self.dof_vel
+            # torques = p_gains*(actions_scaled + self.default_dof_pos - self.dof_pos) - d_gains*self.dof_vel
+            torques = p_gains*(actions_scaled + target_dof_pos  - self.dof_pos) - d_gains*self.dof_vel
         elif control_type=="V":
             torques = p_gains*(actions_scaled - self.dof_vel) - d_gains*(self.dof_vel - self.last_dof_vel)/self.sim_params.dt
         elif control_type=="T":
@@ -1184,3 +1192,16 @@ class LeggedRobot(BaseTask):
         self.gym.refresh_rigid_body_state_tensor(self.sim)
         self.gym.render_all_camera_sensors(self.sim)
         self.render()
+        
+    def get_body_state(self):
+        '''
+        0~3: position
+        3~7: quaternion
+        7~10: linear velocity
+        10~13: angular velocity
+        '''
+        return gymtorch.wrap_tensor(
+            self.gym.acquire_rigid_body_state_tensor(self.sim))
+
+    def body2index(self, name):
+        return self.gym.find_actor_rigid_body_index(self.envs[0], self.actor_handles[0], name, gymapi.DOMAIN_ACTOR)
