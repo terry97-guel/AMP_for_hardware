@@ -29,10 +29,10 @@
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 import glob
 
+from legged_gym import LEGGED_GYM_ROOT_DIR
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/hopturn_a1_timed/*')
-
+MOTION_FILES = glob.glob(f'{LEGGED_GYM_ROOT_DIR}/datasets/hopturn_a1_mpc/*')
 
 class A1HOPCfgVel( LeggedRobotCfg ):
 
@@ -139,9 +139,9 @@ class A1HOPCfgVel( LeggedRobotCfg ):
         max_contact_force = 100. # forces above this value are penalized
         base_height_target = 0.25
         class scales( LeggedRobotCfg.rewards.scales ):
-            pos_motion = 150
-            ang_motion = 150
-            dof_pos_motion = 150
+            pos_motion     = 150 * 3
+            ang_motion     = 150 * 3
+            dof_pos_motion = 150 * 3
 
             dof_vel_motion = 150
             lin_vel_motion = 150
@@ -198,5 +198,6 @@ class A1HOPCfgVelPPO( LeggedRobotCfgPPO ):
         amp_discr_hidden_dims = [1024, 512]
 
         min_normalized_std = [0.01, 0.01, 0.01] * 4
+        # resume = True
 
 

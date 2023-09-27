@@ -363,7 +363,8 @@ def main(qpos_np, FRAME_DURATION, filename):
 
 if __name__ == "__main__":
   from toolbox.read import read_json
-  motion_file = "datasets/hopturn/hopturn.txt"
+  # motion_file = "datasets/hopturn/hopturn.txt"
+  motion_file = "datasets/hopturn/hopturn_mpc_raw.txt"
   motion_dict = read_json(motion_file)
 
 
