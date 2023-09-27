@@ -82,8 +82,10 @@ def play(args):
     img_idx = 0
 
     for i in range(10*int(env.max_episode_length)):
+        if env.times >= env.amp_loader.trajectory_lens[0] - env.dt:
+            env.reset(random_time=False)
         actions = policy(obs.detach())
-        obs, _, rews, dones, infos, _, _ = env.step(actions.detach())
+        obs, _, rews, dones, infos, _, _ = env.step(actions.detach(), RESET_ABLED=False)
         
         # env.reset(random_time=False)
         
@@ -145,6 +147,6 @@ if __name__ == '__main__':
     RECORD_FRAMES = False
     MOVE_CAMERA = False
     args = get_args()
-    args.task = "a1_hopturn_vel"
+    args.task = "a1_hopturn"
     # args.task = "a1_amp"
     play(args)

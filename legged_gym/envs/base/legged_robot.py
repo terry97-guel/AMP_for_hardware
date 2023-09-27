@@ -109,7 +109,7 @@ class LeggedRobot(BaseTask):
         obs, privileged_obs, _, _, _, _, _ = self.step(torch.zeros(self.num_envs, self.num_actions, device=self.device, requires_grad=False))
         return obs, privileged_obs
 
-    def step(self, actions):
+    def step(self, actions, RESET_ABLED=True):
         """ Apply actions, simulate, call self.post_physics_step()
 
         Args:
@@ -126,7 +126,7 @@ class LeggedRobot(BaseTask):
             if self.device == 'cpu':
                 self.gym.fetch_results(self.sim, True)
             self.gym.refresh_dof_state_tensor(self.sim)
-        reset_env_ids, terminal_amp_states = self.post_physics_step()
+        reset_env_ids, terminal_amp_states = self.post_physics_step(RESET_ABLED=RESET_ABLED)
         self.times += self.dt
 
         # return clipped obs, clipped states (None), rewards, dones and infos
@@ -150,7 +150,7 @@ class LeggedRobot(BaseTask):
             policy_obs = self.obs_buf
         return policy_obs
 
-    def post_physics_step(self):
+    def post_physics_step(self, RESET_ABLED = True):
         """ check terminations, compute observations and rewards
             calls self._post_physics_step_callback() for common computations
             calls self._draw_debug_vis() if needed
@@ -176,7 +176,8 @@ class LeggedRobot(BaseTask):
         self.reset_buf[time_end_mask] = True
         env_ids = self.reset_buf.nonzero(as_tuple=False).flatten()
         terminal_amp_states = self.get_amp_observations()[env_ids]
-        self.reset_idx(env_ids)
+        if RESET_ABLED:
+            self.reset_idx(env_ids)
         self.compute_observations() # in some cases a simulation step might be required to refresh some obs (for example body positions)
 
         self.last_actions[:] = self.actions[:]
