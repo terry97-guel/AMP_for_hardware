@@ -38,6 +38,7 @@ from legged_gym.utils import  get_args, export_policy_as_jit, task_registry, Log
 import numpy as np
 import torch
 
+from isaacgym import gymtorch, gymapi, gymutil
 
 def play(args):
     env_cfg, train_cfg = task_registry.get_cfgs(name=args.task)
@@ -84,8 +85,24 @@ def play(args):
         actions = policy(obs.detach())
         obs, _, rews, dones, infos, _, _ = env.step(actions.detach())
         
-        if dones[0]:
-            env.reset(random_time=False)
+        # env.reset(random_time=False)
+        
+        # env_ids = torch.arange(env.num_envs, device=env.device)
+        # env_ids_int32 = env_ids.to(dtype=torch.int32)
+        # env.gym.set_dof_state_tensor_indexed(env.sim,
+        #                                       gymtorch.unwrap_tensor(env.dof_state),
+        #                                       gymtorch.unwrap_tensor(env_ids_int32), len(env_ids_int32))
+        # env.update()
+        # root_pos = env.root_states[0, :3]
+        # body_state = env.get_body_state()
+        # FR_foot_pos = body_state[env.body2index("FR_foot"), :3]
+        # FL_foot_pos = body_state[env.body2index("FL_foot"), :3]
+        
+        # print(FR_foot_pos-root_pos)
+        # print(FL_foot_pos-root_pos)
+        
+        # if dones[0]:
+            # env.reset(random_time=False)
 
         if RECORD_FRAMES:
             if i % 2:
@@ -128,5 +145,6 @@ if __name__ == '__main__':
     RECORD_FRAMES = False
     MOVE_CAMERA = False
     args = get_args()
-    # args.task = "a1_hopturn"
+    args.task = "a1_hopturn_vel"
+    # args.task = "a1_amp"
     play(args)
