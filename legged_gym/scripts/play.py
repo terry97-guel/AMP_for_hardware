@@ -147,6 +147,6 @@ if __name__ == '__main__':
     RECORD_FRAMES = False
     MOVE_CAMERA = False
     args = get_args()
-    args.task = "a1_hopturn"
+    # args.task = "a1_hopturn"
     # args.task = "a1_amp"
     play(args)

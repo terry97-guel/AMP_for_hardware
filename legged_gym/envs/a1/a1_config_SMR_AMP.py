@@ -29,15 +29,17 @@
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 import glob
 
+from legged_gym import LEGGED_GYM_ROOT_DIR
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-# MOTION_FILES = glob.glob('datasets/hopturn_a1/*')
-# MOTION_FILES = glob.glob('datasets/hopturn_a1_timed/*')
-MOTION_FILES = glob.glob('datasets/hopturn_a1_mpc/*')
+MOTION = "hopturn"
+MR = "SMR"
+RL = "AMP"
+ROBOT = "A1"
+ROBOT = ROBOT.lower()
+MOTION_FILES = glob.glob(f'{LEGGED_GYM_ROOT_DIR}/datasets/{ROBOT}/{MOTION}/{MR}/processed/*')
 
-
-class A1HOPCfg( LeggedRobotCfg ):
-
+class Cfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env ):
         num_envs = 5480
         include_history_steps = None  # Number of steps of history to include.
@@ -52,20 +54,20 @@ class A1HOPCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.42] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'leg0_FL_a_hip_joint': -0.15,   # [rad]
-            'leg0_FL_c_thigh_joint': 0.55,     # [rad]
+            'leg0_FL_a_hip_joint': 0.1,   # [rad]
+            'leg0_FL_c_thigh_joint': 0.8,     # [rad]
             'leg0_FL_d_calf_joint': -1.5,   # [rad]
 
-            'leg1_FR_a_hip_joint': 0.15,  # [rad]
-            'leg1_FR_c_thigh_joint': 0.55,     # [rad]
+            'leg1_FR_a_hip_joint': -0.1,  # [rad]
+            'leg1_FR_c_thigh_joint': 0.8,     # [rad]
             'leg1_FR_d_calf_joint': -1.5,  # [rad]
 
-            'leg2_RL_a_hip_joint': -0.15,   # [rad]
-            'leg2_RL_c_thigh_joint': 0.7,   # [rad]
+            'leg2_RL_a_hip_joint': 0.1,   # [rad]
+            'leg2_RL_c_thigh_joint': 1.0,   # [rad]
             'leg2_RL_d_calf_joint': -1.5,    # [rad]
-
-            'leg3_RR_a_hip_joint': 0.15,   # [rad]
-            'leg3_RR_c_thigh_joint': 0.7,   # [rad]
+            
+            'leg3_RR_a_hip_joint': -0.1,   # [rad]
+            'leg3_RR_c_thigh_joint': 1.0,   # [rad]
             'leg3_RR_d_calf_joint': -1.5,    # [rad]
         }
 
@@ -117,15 +119,19 @@ class A1HOPCfg( LeggedRobotCfg ):
 
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
+        soft_dof_vel_limit = 1.
+        soft_torque_limit = 1.
+        base_height_target = 1.
+        max_contact_force = 100. # forces above this value are penalized
         base_height_target = 0.25
         class scales( LeggedRobotCfg.rewards.scales ):
-            pos_motion = 2
-            ang_motion = 0.5
-            # dof_pos_motion = 2
+            pos_motion     = 150 * 3
+            ang_motion     = 150 * 3
+            dof_pos_motion = 150 * 3
 
-            # dof_vel_motion = 1e-2
-            # lin_vel_motion = 4
-            # ang_vel_motion = 1
+            dof_vel_motion = 150
+            lin_vel_motion = 150
+            ang_vel_motion = 150
 
             termination = 0.0
             tracking_lin_vel = 0  
@@ -133,9 +139,9 @@ class A1HOPCfg( LeggedRobotCfg ):
             lin_vel_z = 0.0      # penalize vertical velocity           
             ang_vel_xy = 0.0     # penalize horizontal angular velocity
             orientation = 0.0    # penalize orientation error            
-            torques = -0.02     # penalize torques                        
-            # dof_vel = -0.005         # penalize joint velocities               
-            # dof_acc = -0.001        # penalize joint accelerations               
+            torques = -0.0002     # penalize torques                        
+            dof_vel = -0.0001        # penalize joint velocities               
+            dof_acc = 0.0        # penalize joint accelerations               
             base_height = 0.0    # penalize base height                               
             feet_air_time =  0.0 # penalize feet air time                          
             collision = 0.0      # penalize collisions                   
@@ -151,22 +157,12 @@ class A1HOPCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-1.0, 2.0] # min max [m/s]
-            lin_vel_y = [-0.3, 0.3]   # min max [m/s]
-            ang_vel_yaw = [-1.57, 1.57]    # min max [rad/s]
-            heading = [-3.14, 3.14]
+            lin_vel_x = [0, 0] # min max [m/s]
+            lin_vel_y = [0, 0]   # min max [m/s]
+            ang_vel_yaw = [0, 0]    # min max [rad/s]
+            heading = [0, 0]
 
-    class normalization:
-        class obs_scales:
-            lin_vel = 2.0
-            ang_vel = 0.25
-            dof_pos = 1.0
-            dof_vel = 0.05
-            height_measurements = 5.0
-        clip_observations = 100.
-        clip_actions = 1.
-
-class A1HOPCfgPPO( LeggedRobotCfgPPO ):
+class CfgPPO( LeggedRobotCfgPPO ):
     runner_class_name = 'AMPOnPolicyRunner'
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
@@ -176,17 +172,18 @@ class A1HOPCfgPPO( LeggedRobotCfgPPO ):
 
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'a1_hopturn_pos'
+        experiment_name = f'{ROBOT}_{RL}/{MOTION}/{MR}'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
-        max_iterations = 500000 # number of policy updates
+        max_iterations = 30_000 # number of policy updates
 
-        amp_reward_coef = 2.0
+        amp_reward_coef = 2
         amp_motion_files = MOTION_FILES
         amp_num_preload_transitions = 2000000
         amp_task_reward_lerp = 0.3
         amp_discr_hidden_dims = [1024, 512]
 
         min_normalized_std = [0.01, 0.01, 0.01] * 4
+        # resume = True
 
 

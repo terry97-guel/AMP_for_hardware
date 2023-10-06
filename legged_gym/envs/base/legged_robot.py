@@ -99,7 +99,7 @@ class LeggedRobot(BaseTask):
         self.init_done = True
 
 
-    def reset(self, random_time=True):
+    def reset(self, random_time=False):
         """ Reset all robots"""
         self.reset_idx(torch.arange(self.num_envs, device=self.device), random_time=random_time)
         if self.cfg.env.include_history_steps is not None:

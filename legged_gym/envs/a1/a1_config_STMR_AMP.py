@@ -29,18 +29,22 @@
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 import glob
 
+from legged_gym import LEGGED_GYM_ROOT_DIR
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
-MOTION_FILES = glob.glob('datasets/mocap_motions_a1/*')
+MOTION = "hopturn"
+MR = "STMR"
+RL = "AMP"
+ROBOT = "A1"
+ROBOT = ROBOT.lower()
+MOTION_FILES = glob.glob(f'{LEGGED_GYM_ROOT_DIR}/datasets/{ROBOT}/{MOTION}/{MR}/processed/*')
 
-
-class A1AMPCfg( LeggedRobotCfg ):
-
+class Cfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env ):
         num_envs = 5480
         include_history_steps = None  # Number of steps of history to include.
-        num_observations = 42
-        num_privileged_obs = 48
+        num_observations = 43
+        num_privileged_obs = 49
         reference_state_initialization = True
         reference_state_initialization_prob = 0.85
         amp_motion_files = MOTION_FILES
@@ -50,20 +54,20 @@ class A1AMPCfg( LeggedRobotCfg ):
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.42] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'leg0_FL_a_hip_joint': -0.15,   # [rad]
-            'leg0_FL_c_thigh_joint': 0.55,     # [rad]
+            'leg0_FL_a_hip_joint': 0.1,   # [rad]
+            'leg0_FL_c_thigh_joint': 0.8,     # [rad]
             'leg0_FL_d_calf_joint': -1.5,   # [rad]
 
-            'leg1_FR_a_hip_joint': 0.15,  # [rad]
-            'leg1_FR_c_thigh_joint': 0.55,     # [rad]
+            'leg1_FR_a_hip_joint': -0.1,  # [rad]
+            'leg1_FR_c_thigh_joint': 0.8,     # [rad]
             'leg1_FR_d_calf_joint': -1.5,  # [rad]
 
-            'leg2_RL_a_hip_joint': -0.15,   # [rad]
-            'leg2_RL_c_thigh_joint': 0.7,   # [rad]
+            'leg2_RL_a_hip_joint': 0.1,   # [rad]
+            'leg2_RL_c_thigh_joint': 1.0,   # [rad]
             'leg2_RL_d_calf_joint': -1.5,    # [rad]
-
-            'leg3_RR_a_hip_joint': 0.15,   # [rad]
-            'leg3_RR_c_thigh_joint': 0.7,   # [rad]
+            
+            'leg3_RR_a_hip_joint': -0.1,   # [rad]
+            'leg3_RR_c_thigh_joint': 1.0,   # [rad]
             'leg3_RR_d_calf_joint': -1.5,    # [rad]
         }
 
@@ -115,25 +119,37 @@ class A1AMPCfg( LeggedRobotCfg ):
 
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
+        soft_dof_vel_limit = 1.
+        soft_torque_limit = 1.
+        base_height_target = 1.
+        max_contact_force = 100. # forces above this value are penalized
         base_height_target = 0.25
         class scales( LeggedRobotCfg.rewards.scales ):
-            termination = 0.0
-            tracking_lin_vel = 0
-            tracking_ang_vel = 0
-            lin_vel_z = 0.0
-            ang_vel_xy = 0.0
-            orientation = 0.0
-            torques = 0.0
-            dof_vel = 0.0
-            dof_acc = 0.0
-            base_height = 0.0
-            feet_air_time =  0.0
-            collision = 0.0
-            feet_stumble = 0.0
-            action_rate = 0.0
-            stand_still = 0.0
-            dof_pos_limits = 0.0
+            pos_motion     = 150 * 3
+            ang_motion     = 150 * 3
+            dof_pos_motion = 150 * 3
 
+            dof_vel_motion = 150
+            lin_vel_motion = 150
+            ang_vel_motion = 150
+
+            termination = 0.0
+            tracking_lin_vel = 0  
+            tracking_ang_vel = 0  
+            lin_vel_z = 0.0      # penalize vertical velocity           
+            ang_vel_xy = 0.0     # penalize horizontal angular velocity
+            orientation = 0.0    # penalize orientation error            
+            torques = -0.0002     # penalize torques                        
+            dof_vel = -0.0001        # penalize joint velocities               
+            dof_acc = 0.0        # penalize joint accelerations               
+            base_height = 0.0    # penalize base height                               
+            feet_air_time =  0.0 # penalize feet air time                          
+            collision = 0.0      # penalize collisions                   
+            feet_stumble = 0.0   # penalize feet stumble                    
+            action_rate = 0.0    # penalize change in action                 
+            stand_still = 0.0    # penalize standing still                     
+            dof_pos_limits = 0.0 # penalize joint position limits             
+            
     class commands:
         curriculum = False
         max_curriculum = 1.
@@ -141,12 +157,12 @@ class A1AMPCfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-1.0, 2.0] # min max [m/s]
-            lin_vel_y = [-0.3, 0.3]   # min max [m/s]
-            ang_vel_yaw = [-1.57, 1.57]    # min max [rad/s]
-            heading = [-3.14, 3.14]
+            lin_vel_x = [0, 0] # min max [m/s]
+            lin_vel_y = [0, 0]   # min max [m/s]
+            ang_vel_yaw = [0, 0]    # min max [rad/s]
+            heading = [0, 0]
 
-class A1AMPCfgPPO( LeggedRobotCfgPPO ):
+class CfgPPO( LeggedRobotCfgPPO ):
     runner_class_name = 'AMPOnPolicyRunner'
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         entropy_coef = 0.01
@@ -156,17 +172,18 @@ class A1AMPCfgPPO( LeggedRobotCfgPPO ):
 
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = 'a1_amp_example'
+        experiment_name = f'{ROBOT}_{RL}/{MOTION}/{MR}'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
-        max_iterations = 500000 # number of policy updates
+        max_iterations = 30_000 # number of policy updates
 
-        amp_reward_coef = 2.0
+        amp_reward_coef = 2
         amp_motion_files = MOTION_FILES
         amp_num_preload_transitions = 2000000
         amp_task_reward_lerp = 0.3
         amp_discr_hidden_dims = [1024, 512]
 
         min_normalized_std = [0.01, 0.01, 0.01] * 4
+        # resume = True
 
 
