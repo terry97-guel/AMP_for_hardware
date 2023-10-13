@@ -120,8 +120,8 @@ class Cfg( LeggedRobotCfg ):
         soft_dof_pos_limit = 0.9
         base_height_target = 0.25
         class scales( LeggedRobotCfg.rewards.scales ):
-            pos_motion     = 50
-            ang_motion     = 50
+            pos_motion     = 150 * 3
+            ang_motion     = 150 * 3
             # dof_pos_motion = 2
 
             # dof_vel_motion = 1e-2
@@ -152,11 +152,11 @@ class Cfg( LeggedRobotCfg ):
         resampling_time = 10. # time before command are changed[s]
         heading_command = False # if true: compute ang vel command from heading error
         class ranges:
-            lin_vel_x = [-1.0, 2.0] # min max [m/s]
-            lin_vel_y = [-0.3, 0.3]   # min max [m/s]
-            ang_vel_yaw = [-1.57, 1.57]    # min max [rad/s]
-            heading = [-3.14, 3.14]
-
+            lin_vel_x = [0, 0] # min max [m/s]
+            lin_vel_y = [0, 0]   # min max [m/s]
+            ang_vel_yaw = [0, 0]    # min max [rad/s]
+            heading = [0, 0]
+            
     class normalization:
         class obs_scales:
             lin_vel = 2.0
@@ -180,7 +180,7 @@ class CfgPPO( LeggedRobotCfgPPO ):
         experiment_name = f'{ROBOT}_{RL}/{MOTION}/{MR}'
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
-        max_iterations = 30_000 # number of policy updates
+        max_iterations = 100_000 # number of policy updates
 
         amp_reward_coef = 2.0
         amp_motion_files = MOTION_FILES
