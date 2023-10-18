@@ -23,30 +23,34 @@ import numpy as np
 from legged_gym import LEGGED_GYM_ROOT_DIR
 
 ROBOT = "a1"
+ROBOT = ROBOT.lower()
 MOTION = "hopturn"
-MR_LS = ['NaiveMR', "TMR", "SMR","STMR"]
-
-# MR = MR_LS[0]
+MR_LS = ['NMR', "TMR", "SMR","STMR"]
+MR_LS = ["TMR"]
 
 for MR in MR_LS:
   class A1config:
     VISUALIZE_RETARGETING = True
 
     URDF_FILENAME = f"{LEGGED_GYM_ROOT_DIR}/resources/robots/{ROBOT}/urdf/{ROBOT}.urdf"
-    OUTPUT_DIR = f"{LEGGED_GYM_ROOT_DIR}/datasets/{ROBOT}/{MOTION}/{MR}/processed"
+    OUTPUT_DIR = f'{LEGGED_GYM_ROOT_DIR}/datasets/{MOTION}/{ROBOT}/{MR}/{MOTION}_{ROBOT}_{MR}_processed'
 
-    INIT_POS = np.array([0, 0, 0.32])
-    INIT_ROT = np.array([0, 0, 0, 1.0])
-
-    DEFAULT_JOINT_POSE = np.array([0, 0.9, -1.8, 0, 0.9, -1.8, 0, 0.9, -1.8, 0, 0.9, -1.8])
+    if ROBOT == 'a1':
+      INIT_POS = np.array([0, 0, 0.26])
+      DEFAULT_JOINT_POSE = np.array([0, 0.9, -1.8, 0, 0.9, -1.8, 0, 0.9, -1.8, 0, 0.9, -1.8])
+      INIT_ROT = np.array([0, 0, 0, 1.0])
+    if ROBOT == "go1":
+      INIT_POS = np.array([0, 0, 0.28])
+      DEFAULT_JOINT_POSE = np.array([0, 0.9, -1.8, 0, 0.9, -1.8, 0, 0.9, -1.8, 0, 0.9, -1.8])
+      INIT_ROT = np.array([0, 0, 0, 1.0])
 
     FR_FOOT_NAME = "FR_foot"
     FL_FOOT_NAME = "FL_foot"
     HR_FOOT_NAME = "RR_foot"
     HL_FOOT_NAME = "RL_foot"
 
-    filename = f"{MOTION}_{ROBOT}"
-    input_file = f"{LEGGED_GYM_ROOT_DIR}/datasets/{ROBOT}/{MOTION}/{MR}/{MOTION}_{ROBOT}.txt"
+    filename = f"{MOTION}_{ROBOT}_{MR}"
+    input_file = f"{LEGGED_GYM_ROOT_DIR}/datasets/{MOTION}/{ROBOT}/{MR}/{MOTION}_{ROBOT}_{MR}_raw.txt"
 
   config = A1config()
 

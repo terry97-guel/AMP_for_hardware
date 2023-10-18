@@ -28,13 +28,14 @@
 #
 # Copyright (c) 2021 ETH Zurich, Nikita Rudin
 import glob
+
 from legged_gym import LEGGED_GYM_ROOT_DIR
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO
 
 MOTION = "hopturn"
-MR = "NMR"
+MR = "SMR"
 RL = "AMP"
-ROBOT = "A1"
+ROBOT = "go1"
 ROBOT = ROBOT.lower()
 MOTION_FILES = glob.glob(f'{LEGGED_GYM_ROOT_DIR}/datasets/{MOTION}/{ROBOT}/{MR}/{MOTION}_{ROBOT}_{MR}_processed/*')
 
@@ -51,7 +52,7 @@ class Cfg( LeggedRobotCfg ):
         get_commands_from_joystick = False
 
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.26] # x,y,z [m]
+        pos = [0.0, 0.0, 0.28] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
             'leg0_FL_a_hip_joint': 0.0,   # [rad]
             'leg0_FL_c_thigh_joint': 0.9,     # [rad]
@@ -86,7 +87,7 @@ class Cfg( LeggedRobotCfg ):
         measure_heights = False
 
     class asset( LeggedRobotCfg.asset ):
-        file = f'{LEGGED_GYM_ROOT_DIR}/resources/robots/{ROBOT}/urdf/{ROBOT}.urdf'
+        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf'
         foot_name = "foot"
         penalize_contacts_on = ["thigh", "calf"]
         terminate_after_contacts_on = [
@@ -119,15 +120,19 @@ class Cfg( LeggedRobotCfg ):
 
     class rewards( LeggedRobotCfg.rewards ):
         soft_dof_pos_limit = 0.9
+        soft_dof_vel_limit = 1.
+        soft_torque_limit = 1.
+        base_height_target = 1.
+        max_contact_force = 100. # forces above this value are penalized
         base_height_target = 0.25
         class scales( LeggedRobotCfg.rewards.scales ):
             pos_motion     = 150 * 3
             ang_motion     = 150 * 3
-            # dof_pos_motion = 2
+            dof_pos_motion = 150 * 3
 
-            # dof_vel_motion = 1e-2
-            # lin_vel_motion = 4
-            # ang_vel_motion = 1
+            dof_vel_motion = 150
+            lin_vel_motion = 150
+            ang_vel_motion = 150
 
             termination = 0.0
             tracking_lin_vel = 0  
@@ -135,9 +140,9 @@ class Cfg( LeggedRobotCfg ):
             lin_vel_z = 0.0      # penalize vertical velocity           
             ang_vel_xy = 0.0     # penalize horizontal angular velocity
             orientation = 0.0    # penalize orientation error            
-            torques = -0.02     # penalize torques                        
-            # dof_vel = -0.005         # penalize joint velocities               
-            # dof_acc = -0.001        # penalize joint accelerations               
+            torques = -0.0002     # penalize torques                        
+            dof_vel = -0.0001        # penalize joint velocities               
+            dof_acc = 0.0        # penalize joint accelerations               
             base_height = 0.0    # penalize base height                               
             feet_air_time =  0.0 # penalize feet air time                          
             collision = 0.0      # penalize collisions                   
@@ -157,16 +162,6 @@ class Cfg( LeggedRobotCfg ):
             lin_vel_y = [0, 0]   # min max [m/s]
             ang_vel_yaw = [0, 0]    # min max [rad/s]
             heading = [0, 0]
-            
-    class normalization:
-        class obs_scales:
-            lin_vel = 2.0
-            ang_vel = 0.25
-            dof_pos = 1.0
-            dof_vel = 0.05
-            height_measurements = 5.0
-        clip_observations = 100.
-        clip_actions = 1.
 
 class CfgPPO( LeggedRobotCfgPPO ):
     runner_class_name = 'AMPOnPolicyRunner'
@@ -183,12 +178,13 @@ class CfgPPO( LeggedRobotCfgPPO ):
         policy_class_name = 'ActorCritic'
         max_iterations = 50_000 # number of policy updates
 
-        amp_reward_coef = 2.0
+        amp_reward_coef = 2
         amp_motion_files = MOTION_FILES
         amp_num_preload_transitions = 2000000
         amp_task_reward_lerp = 0.3
         amp_discr_hidden_dims = [1024, 512]
 
         min_normalized_std = [0.01, 0.01, 0.01] * 4
+        # resume = True
 
 

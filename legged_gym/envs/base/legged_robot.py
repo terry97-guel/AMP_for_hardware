@@ -89,8 +89,8 @@ class LeggedRobot(BaseTask):
           self._p1.init()
           print(f"Loaded joystick with {self._p1.get_numaxes()} axes.")
 
-        if self.cfg.env.reference_state_initialization:
-            self.amp_loader = AMPLoader(motion_files=self.cfg.env.amp_motion_files, device=self.device, time_between_frames=self.dt)
+        # if self.cfg.env.reference_state_initialization:
+        self.amp_loader = AMPLoader(motion_files=self.cfg.env.amp_motion_files, device=self.device, time_between_frames=self.dt)
 
         if not self.headless:
             self.set_camera(self.cfg.viewer.pos, self.cfg.viewer.lookat)
@@ -216,23 +216,21 @@ class LeggedRobot(BaseTask):
             self.update_command_curriculum(env_ids)
 
         # reset robot states
+        num_frames = len(env_ids)
+        traj_idxs = self.amp_loader.weighted_traj_idx_sample_batch(num_frames)
+        # self.traj_idxs[env_ids] = torch.tensor(traj_idxs, device=self.device)
+        # self.times[env_ids]     = torch.tensor(times, device=self.device)
+
+        if random_time and self.cfg.env.reference_state_initialization:
+            times = self.amp_loader.traj_time_sample_batch(traj_idxs)
+        else:
+            times = np.zeros(num_frames)
+        self.traj_idxs[env_ids.cpu().numpy()] = traj_idxs
+        self.times[env_ids.cpu().numpy()]     =  times
+        
         if self.cfg.env.reference_state_initialization:
-            
-            num_frames = len(env_ids)
-            traj_idxs = self.amp_loader.weighted_traj_idx_sample_batch(num_frames)
-            if random_time:
-                times = self.amp_loader.traj_time_sample_batch(traj_idxs)
-            else:
-                times = np.zeros(num_frames)
             frames = self.amp_loader.get_full_frame_at_time_batch(traj_idxs, times)
             
-            # self.traj_idxs[env_ids] = torch.tensor(traj_idxs, device=self.device)
-            # self.times[env_ids]     = torch.tensor(times, device=self.device)
-
-            self.traj_idxs[env_ids.cpu().numpy()] = traj_idxs
-            self.times[env_ids.cpu().numpy()]     =  times
-            
-
             self._reset_dofs_amp(env_ids, frames)
             self._reset_root_states_amp(env_ids, frames)
         else:
@@ -289,35 +287,35 @@ class LeggedRobot(BaseTask):
         """ Computes observations
         """
 
-        if self._get_commands_from_joystick:
-          for event in pygame.event.get():
-            lin_vel_x = -1 * self._p1.get_axis(1)
-            if lin_vel_x >= 0:
-             lin_vel_x *= torch.abs(torch.tensor(self.command_ranges["lin_vel_x"][1]))
-            else:
-             lin_vel_x *= torch.abs(torch.tensor(self.command_ranges["lin_vel_x"][0]))
+        # if self._get_commands_from_joystick:
+        #   for event in pygame.event.get():
+        #     lin_vel_x = -1 * self._p1.get_axis(1)
+        #     if lin_vel_x >= 0:
+        #      lin_vel_x *= torch.abs(torch.tensor(self.command_ranges["lin_vel_x"][1]))
+        #     else:
+        #      lin_vel_x *= torch.abs(torch.tensor(self.command_ranges["lin_vel_x"][0]))
 
-            lin_vel_y = -1 * self._p1.get_axis(3)
-            if lin_vel_y >= 0:
-             lin_vel_y *= torch.abs(torch.tensor(self.command_ranges["lin_vel_y"][1]))
-            else:
-             lin_vel_y *= torch.abs(torch.tensor(self.command_ranges["lin_vel_y"][0]))
+        #     lin_vel_y = -1 * self._p1.get_axis(3)
+        #     if lin_vel_y >= 0:
+        #      lin_vel_y *= torch.abs(torch.tensor(self.command_ranges["lin_vel_y"][1]))
+        #     else:
+        #      lin_vel_y *= torch.abs(torch.tensor(self.command_ranges["lin_vel_y"][0]))
 
-            ang_vel = -1 * self._p1.get_axis(0)
-            if ang_vel >= 0:
-             ang_vel *= torch.abs(torch.tensor(self.command_ranges["ang_vel_yaw"][1]))
-            else:
-             ang_vel *= torch.abs(torch.tensor(self.command_ranges["ang_vel_yaw"][0]))
+        #     ang_vel = -1 * self._p1.get_axis(0)
+        #     if ang_vel >= 0:
+        #      ang_vel *= torch.abs(torch.tensor(self.command_ranges["ang_vel_yaw"][1]))
+        #     else:
+        #      ang_vel *= torch.abs(torch.tensor(self.command_ranges["ang_vel_yaw"][0]))
 
-            self.commands[:, 0] = lin_vel_x
-            self.commands[:, 1] = lin_vel_y
-            self.commands[:, 2] = ang_vel
+        #     self.commands[:, 0] = lin_vel_x
+        #     self.commands[:, 1] = lin_vel_y
+        #     self.commands[:, 2] = ang_vel
 
         self.privileged_obs_buf = torch.cat((   
             self.base_lin_vel * self.obs_scales.lin_vel,
             self.base_ang_vel  * self.obs_scales.ang_vel,
             self.projected_gravity,
-            self.commands[:, :3] * self.commands_scale,
+            # self.commands[:, :3] * self.commands_scale,
             (self.dof_pos - self.default_dof_pos) * self.obs_scales.dof_pos,
             self.dof_vel * self.obs_scales.dof_vel,
             self.actions,
@@ -526,7 +524,7 @@ class LeggedRobot(BaseTask):
         Args:
             env_ids (List[int]): Environemnt ids
         """
-        self.dof_pos[env_ids] = self.default_dof_pos * torch_rand_float(0.5, 1.5, (len(env_ids), self.num_dof), device=self.device)
+        self.dof_pos[env_ids] = self.default_dof_pos * torch_rand_float(-0.05, 0.05, (len(env_ids), self.num_dof), device=self.device)
         self.dof_vel[env_ids] = 0.
 
         env_ids_int32 = env_ids.to(dtype=torch.int32)
@@ -561,12 +559,12 @@ class LeggedRobot(BaseTask):
         if self.custom_origins:
             self.root_states[env_ids] = self.base_init_state
             self.root_states[env_ids, :3] += self.env_origins[env_ids]
-            self.root_states[env_ids, :2] += torch_rand_float(-1., 1., (len(env_ids), 2), device=self.device) # xy position within 1m of the center
+            # self.root_states[env_ids, :2] += torch_rand_float(-1., 1., (len(env_ids), 2), device=self.device) # xy position within 1m of the center
         else:
             self.root_states[env_ids] = self.base_init_state
             self.root_states[env_ids, :3] += self.env_origins[env_ids]
         # base velocities
-        self.root_states[env_ids, 7:13] = torch_rand_float(-0.5, 0.5, (len(env_ids), 6), device=self.device) # [7:10]: lin vel, [10:13]: ang vel
+        self.root_states[env_ids, 7:13] = torch_rand_float(-0.05, 0.05, (len(env_ids), 6), device=self.device) # [7:10]: lin vel, [10:13]: ang vel
         env_ids_int32 = env_ids.to(dtype=torch.int32)
         self.gym.set_actor_root_state_tensor_indexed(self.sim,
                                                      gymtorch.unwrap_tensor(self.root_states),
@@ -651,11 +649,11 @@ class LeggedRobot(BaseTask):
         noise_vec[:3] = noise_scales.lin_vel * noise_level * self.obs_scales.lin_vel
         noise_vec[3:6] = noise_scales.ang_vel * noise_level * self.obs_scales.ang_vel
         noise_vec[6:9] = noise_scales.gravity * noise_level
-        noise_vec[9:12] = 0. # commands
-        noise_vec[12:24] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
-        noise_vec[24:36] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
-        noise_vec[36:48] = 0. # previous actions
-        noise_vec[48]    = self.dt
+        # noise_vec[9:12] = 0. # commands
+        noise_vec[12-3:24-3] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
+        noise_vec[24-3:36-3] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
+        noise_vec[36-3:48-3] = 0. # previous actions
+        noise_vec[48-3]    = self.dt
         if self.cfg.terrain.measure_heights:
             noise_vec[48:235] = noise_scales.height_measurements* noise_level * self.obs_scales.height_measurements
         return noise_vec

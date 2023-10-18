@@ -30,26 +30,27 @@
 
 from legged_gym import LEGGED_GYM_ROOT_DIR, LEGGED_GYM_ENVS_DIR
 from .base.legged_robot import LeggedRobot
+
 from legged_gym.envs.a1.a1_config_NaiveMR_AMP import Cfg as A1_NaiveMR_Cfg
 from legged_gym.envs.a1.a1_config_NaiveMR_AMP import CfgPPO as A1_NaiveMR_AMP
+from legged_gym.envs.a1.a1_config_TMR_AMP  import Cfg    as A1_TMR_Cfg
+from legged_gym.envs.a1.a1_config_TMR_AMP  import CfgPPO as A1_TMR_AMP
+from legged_gym.envs.a1.a1_config_SMR_AMP  import Cfg    as A1_SMR_Cfg
+from legged_gym.envs.a1.a1_config_SMR_AMP  import CfgPPO as A1_SMR_AMP
+from legged_gym.envs.a1.a1_config_STMR_AMP import Cfg    as A1_STMR_Cfg
+from legged_gym.envs.a1.a1_config_STMR_AMP import CfgPPO as A1_STMR_AMP
 
-from legged_gym.envs.a1.a1_config_TMR_AMP import Cfg as A1_TMR_Cfg
-from legged_gym.envs.a1.a1_config_TMR_AMP import CfgPPO as A1_TMR_AMP
+from legged_gym.envs.go1.go1_config_TMR_AMP  import Cfg    as GO1_TMR_Cfg
+from legged_gym.envs.go1.go1_config_TMR_AMP  import CfgPPO as GO1_TMR_AMP
 
-from .go1.go1_amp_config import GO1AMPCfg, GO1AMPCfgPPO
-from .go1.go1_hopturn import GO1HOPCfg, GO1HOPCfgPPO
+
 
 import os
 
 from legged_gym.utils.task_registry import task_registry
 
-task_registry.register("a1_naive_amp", LeggedRobot, A1_NaiveMR_Cfg(), A1_NaiveMR_AMP())
-task_registry.register("a1_temporal_amp", LeggedRobot, A1_TMR_Cfg(), A1_TMR_AMP())
+task_registry.register("a1_NMR_AMP", LeggedRobot, A1_NaiveMR_Cfg(), A1_NaiveMR_AMP())
+task_registry.register("a1_TMR_AMP", LeggedRobot, A1_TMR_Cfg(), A1_TMR_AMP())
 
 
-# task_registry.register( "a1", LeggedRobot, A1RoughCfg(), A1RoughCfgPPO() )
-# task_registry.register( "a1_amp", LeggedRobot, A1AMPCfg(), A1AMPCfgPPO() )
-# task_registry.register( "a1_hopturn", LeggedRobot, A1HOPCfg(), A1HOPCfgPPO() )
-# task_registry.register( "a1_hopturn_vel", LeggedRobot, A1HOPCfgVel(), A1HOPCfgVelPPO() )
-# task_registry.register( "go1_amp", LeggedRobot, GO1AMPCfg(), GO1AMPCfgPPO() )
-# task_registry.register( "go1_hopturn", LeggedRobot, GO1HOPCfg(), GO1HOPCfgPPO() )
+task_registry.register("go1_TMR_AMP", LeggedRobot, GO1_TMR_Cfg(), GO1_TMR_AMP())

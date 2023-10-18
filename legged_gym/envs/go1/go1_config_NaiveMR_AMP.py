@@ -34,7 +34,7 @@ from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobot
 MOTION = "hopturn"
 MR = "NMR"
 RL = "AMP"
-ROBOT = "A1"
+ROBOT = "go1"
 ROBOT = ROBOT.lower()
 MOTION_FILES = glob.glob(f'{LEGGED_GYM_ROOT_DIR}/datasets/{MOTION}/{ROBOT}/{MR}/{MOTION}_{ROBOT}_{MR}_processed/*')
 
@@ -51,7 +51,7 @@ class Cfg( LeggedRobotCfg ):
         get_commands_from_joystick = False
 
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.26] # x,y,z [m]
+        pos = [0.0, 0.0, 0.28] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
             'leg0_FL_a_hip_joint': 0.0,   # [rad]
             'leg0_FL_c_thigh_joint': 0.9,     # [rad]

@@ -37,39 +37,40 @@ MR = "SMR"
 RL = "AMP"
 ROBOT = "A1"
 ROBOT = ROBOT.lower()
-MOTION_FILES = glob.glob(f'{LEGGED_GYM_ROOT_DIR}/datasets/{ROBOT}/{MOTION}/{MR}/processed/*')
+MOTION_FILES = glob.glob(f'{LEGGED_GYM_ROOT_DIR}/datasets/{MOTION}/{ROBOT}/{MR}/{MOTION}_{ROBOT}_{MR}_processed/*')
 
 class Cfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env ):
         num_envs = 5480
         include_history_steps = None  # Number of steps of history to include.
-        num_observations = 43
-        num_privileged_obs = 49
-        reference_state_initialization = True
+        num_observations = 40
+        num_privileged_obs = 46
+        reference_state_initialization = False
         reference_state_initialization_prob = 0.85
         amp_motion_files = MOTION_FILES
         ee_names = ["FL_foot", "FR_foot", "RL_foot", "RR_foot"]
         get_commands_from_joystick = False
 
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.42] # x,y,z [m]
+        pos = [0.0, 0.0, 0.26] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'leg0_FL_a_hip_joint': 0.1,   # [rad]
-            'leg0_FL_c_thigh_joint': 0.8,     # [rad]
-            'leg0_FL_d_calf_joint': -1.5,   # [rad]
+            'leg0_FL_a_hip_joint': 0.0,   # [rad]
+            'leg0_FL_c_thigh_joint': 0.9,     # [rad]
+            'leg0_FL_d_calf_joint': -1.8,   # [rad]
 
-            'leg1_FR_a_hip_joint': -0.1,  # [rad]
-            'leg1_FR_c_thigh_joint': 0.8,     # [rad]
-            'leg1_FR_d_calf_joint': -1.5,  # [rad]
+            'leg1_FR_a_hip_joint': 0.0,  # [rad]
+            'leg1_FR_c_thigh_joint': 0.9,     # [rad]
+            'leg1_FR_d_calf_joint': -1.8,  # [rad]
 
-            'leg2_RL_a_hip_joint': 0.1,   # [rad]
-            'leg2_RL_c_thigh_joint': 1.0,   # [rad]
-            'leg2_RL_d_calf_joint': -1.5,    # [rad]
+            'leg2_RL_a_hip_joint': 0.0,   # [rad]
+            'leg2_RL_c_thigh_joint': 0.9,   # [rad]
+            'leg2_RL_d_calf_joint': -1.8,    # [rad]
             
-            'leg3_RR_a_hip_joint': -0.1,   # [rad]
-            'leg3_RR_c_thigh_joint': 1.0,   # [rad]
-            'leg3_RR_d_calf_joint': -1.5,    # [rad]
+            'leg3_RR_a_hip_joint': -0.0,   # [rad]
+            'leg3_RR_c_thigh_joint': 0.9,   # [rad]
+            'leg3_RR_d_calf_joint': -1.8,    # [rad]
         }
+
 
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
@@ -172,10 +173,10 @@ class CfgPPO( LeggedRobotCfgPPO ):
 
     class runner( LeggedRobotCfgPPO.runner ):
         run_name = ''
-        experiment_name = f'{ROBOT}_{RL}/{MOTION}/{MR}'
+        experiment_name = f"AMP/{MOTION}/{ROBOT}/{MR}/{MOTION}_{ROBOT}_{MR}"
         algorithm_class_name = 'AMPPPO'
         policy_class_name = 'ActorCritic'
-        max_iterations = 30_000 # number of policy updates
+        max_iterations = 50_000 # number of policy updates
 
         amp_reward_coef = 2
         amp_motion_files = MOTION_FILES
