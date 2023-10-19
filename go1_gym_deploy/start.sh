@@ -12,3 +12,4 @@ docker run -d\
     --name="foxy_controller" \
     jetson-model-deployment tail -f /dev/null
     docker start foxy_controller
+docker exec -it foxy_controller /bin/bash

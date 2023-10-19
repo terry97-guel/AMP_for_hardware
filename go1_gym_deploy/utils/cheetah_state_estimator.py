@@ -49,7 +49,7 @@ def get_rotation_matrix_from_rpy(rpy):
 
 
 class StateEstimator:
-    def __init__(self, lc, use_cameras=True):
+    def __init__(self, lc, use_cameras=False):
 
         # reverse legs
         self.joint_idxs = [3, 4, 5, 0, 1, 2, 9, 10, 11, 6, 7, 8]
@@ -61,8 +61,8 @@ class StateEstimator:
         self.joint_pos = np.zeros(12)
         self.joint_vel = np.zeros(12)
         self.tau_est = np.zeros(12)
-        self.world_lin_vel = np.zeros(3)
-        self.world_ang_vel = np.zeros(3)
+        # self.world_lin_vel = np.zeros(3)
+        # self.world_ang_vel = np.zeros(3)
         self.euler = np.zeros(3)
         self.R = np.eye(3)
         self.buf_idx = 0
@@ -73,8 +73,8 @@ class StateEstimator:
         self.euler_prev = np.zeros(3)
         self.timuprev = time.time()
 
-        self.body_lin_vel = np.zeros(3)
-        self.body_ang_vel = np.zeros(3)
+        # self.body_lin_vel = np.zeros(3)
+        # self.body_ang_vel = np.zeros(3)
         self.smoothing_ratio = 0.2
 
         self.contact_state = np.ones(4)
@@ -97,13 +97,6 @@ class StateEstimator:
         self.right_lower_left_switch_pressed = 0
         self.right_lower_right_switch_pressed = 0
 
-        # default trotting gait
-        self.cmd_freq = 3.0
-        self.cmd_phase = 0.5
-        self.cmd_offset = 0.0
-        self.cmd_duration = 0.5
-
-
         self.init_time = time.time()
         self.received_first_legdata = False
 
@@ -111,24 +104,24 @@ class StateEstimator:
         self.legdata_state_subscription = self.lc.subscribe("leg_control_data", self._legdata_cb)
         self.rc_command_subscription = self.lc.subscribe("rc_command", self._rc_command_cb)
 
-        if use_cameras:
-            for cam_id in [1, 2, 3, 4, 5]:
-                self.camera_subscription = self.lc.subscribe(f"camera{cam_id}", self._camera_cb)
-            self.camera_names = ["front", "bottom", "left", "right", "rear"]
-            for cam_name in self.camera_names:
-                self.camera_subscription = self.lc.subscribe(f"rect_image_{cam_name}", self._rect_camera_cb)
-        self.camera_image_left = None
-        self.camera_image_right = None
-        self.camera_image_front = None
-        self.camera_image_bottom = None
-        self.camera_image_rear = None
+        # if use_cameras:
+        #     for cam_id in [1, 2, 3, 4, 5]:
+        #         self.camera_subscription = self.lc.subscribe(f"camera{cam_id}", self._camera_cb)
+        #     self.camera_names = ["front", "bottom", "left", "right", "rear"]
+        #     for cam_name in self.camera_names:
+        #         self.camera_subscription = self.lc.subscribe(f"rect_image_{cam_name}", self._rect_camera_cb)
+        # self.camera_image_left = None
+        # self.camera_image_right = None
+        # self.camera_image_front = None
+        # self.camera_image_bottom = None
+        # self.camera_image_rear = None
 
-        self.body_loc = np.array([0, 0, 0])
-        self.body_quat = np.array([0, 0, 0, 1])
+        # self.body_loc = np.array([0, 0, 0])
+        # self.body_quat = np.array([0, 0, 0, 1])
 
-    def get_body_linear_vel(self):
-        self.body_lin_vel = np.dot(self.R.T, self.world_lin_vel)
-        return self.body_lin_vel
+    # def get_body_linear_vel(self):
+    #     self.body_lin_vel = np.dot(self.R.T, self.world_lin_vel)
+    #     return self.body_lin_vel
 
     def get_body_angular_vel(self):
         self.body_ang_vel = self.smoothing_ratio * np.mean(self.deuler_history / self.dt_history, axis=0) + (
@@ -146,79 +139,26 @@ class StateEstimator:
         return self.euler
 
     def get_command(self):
-        MODES_LEFT = ["body_height", "lat_vel", "stance_width"]
-        MODES_RIGHT = ["step_frequency", "footswing_height", "body_pitch"]
-
         if self.left_upper_switch_pressed:
-            self.ctrlmode_left = (self.ctrlmode_left + 1) % 3
+            self.ctrlmode_left = (self.ctrlmode_left + 1) % 2
             self.left_upper_switch_pressed = False
-        if self.right_upper_switch_pressed:
-            self.ctrlmode_right = (self.ctrlmode_right + 1) % 3
-            self.right_upper_switch_pressed = False
-
-        MODE_LEFT = MODES_LEFT[self.ctrlmode_left]
-        MODE_RIGHT = MODES_RIGHT[self.ctrlmode_right]
-
-        # always in use
-        cmd_x = 1 * self.left_stick[1]
-        cmd_yaw = -1 * self.right_stick[0]
-
-        # default values
-        cmd_y = 0.  # -1 * self.left_stick[0]
-        cmd_height = 0.
-        cmd_footswing = 0.08
-        cmd_stance_width = 0.33
-        cmd_stance_length = 0.40
-        cmd_ori_pitch = 0.
-        cmd_ori_roll = 0.
-        cmd_freq = 3.0
-
-        # joystick commands
-        if MODE_LEFT == "body_height":
-            cmd_height = 0.3 * self.left_stick[0]
-        elif MODE_LEFT == "lat_vel":
-            cmd_y = 0.6 * self.left_stick[0]
-        elif MODE_LEFT == "stance_width":
-            cmd_stance_width = 0.275 + 0.175 * self.left_stick[0]
-        if MODE_RIGHT == "step_frequency":
-            min_freq = 2.0
-            max_freq = 4.0
-            cmd_freq = (1 + self.right_stick[1]) / 2 * (max_freq - min_freq) + min_freq
-        elif MODE_RIGHT == "footswing_height":
-            cmd_footswing = max(0, self.right_stick[1]) * 0.32 + 0.03
-        elif MODE_RIGHT == "body_pitch":
-            cmd_ori_pitch = -0.4 * self.right_stick[1]
-
-        # gait buttons
-        if self.mode == 0:
-            self.cmd_phase = 0.5
-            self.cmd_offset = 0.0
-            self.cmd_bound = 0.0
-            self.cmd_duration = 0.5
-        elif self.mode == 1:
-            self.cmd_phase = 0.0
-            self.cmd_offset = 0.0
-            self.cmd_bound = 0.0
-            self.cmd_duration = 0.5
-        elif self.mode == 2:
-            self.cmd_phase = 0.0
-            self.cmd_offset = 0.5
-            self.cmd_bound = 0.0
-            self.cmd_duration = 0.5
-        elif self.mode == 3:
-            self.cmd_phase = 0.0
-            self.cmd_offset = 0.0
-            self.cmd_bound = 0.5
-            self.cmd_duration = 0.5
+        
+        if self.ctrlmode_left %2==1:
+            RUN = 1
         else:
-            self.cmd_phase = 0.5
-            self.cmd_offset = 0.0
-            self.cmd_bound = 0.0
-            self.cmd_duration = 0.5
+            RUN = 0
 
-        return np.array([cmd_x, cmd_y, cmd_yaw, cmd_height, cmd_freq, self.cmd_phase, self.cmd_offset, self.cmd_bound,
-                         self.cmd_duration, cmd_footswing, cmd_ori_pitch, cmd_ori_roll, cmd_stance_width,
-                         cmd_stance_length, 0, 0, 0, 0, 0])
+        if self.right_upper_switch_pressed:
+            self.ctrlmode_right = (self.ctrlmode_right + 1) % 2
+            self.right_upper_switch_pressed = False
+        
+        if self.ctrlmode_right %2==1:
+            RESET_TIMER = 1
+            RUN = 0
+        else:
+            RESET_TIMER = 0
+        
+        return np.array([RUN, RESET_TIMER])
 
     def get_buttons(self):
         return np.array([self.left_lower_left_switch, self.left_upper_switch, self.right_lower_right_switch, self.right_upper_switch])
@@ -236,11 +176,11 @@ class StateEstimator:
     def get_yaw(self):
         return self.euler[2]
 
-    def get_body_loc(self):
-        return np.array(self.body_loc)
+    # def get_body_loc(self):
+    #     return np.array(self.body_loc)
 
-    def get_body_quat(self):
-        return np.array(self.body_quat)
+    # def get_body_quat(self):
+    #     return np.array(self.body_quat)
 
     def get_camera_front(self):
         return self.camera_image_front

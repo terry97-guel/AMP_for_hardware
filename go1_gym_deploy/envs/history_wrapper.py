@@ -2,10 +2,12 @@
 
 # assert isaacgym, "import isaacgym before pytorch"
 import torch
-
+# from go1_gym_deploy.utils.cheetah_state_estimator import StateEstimator
+# from go1_gym_deploy.utils.command_profile import RCControllerProfile
+from go1_gym_deploy.envs.lcm_agent import LCMAgent
 
 class HistoryWrapper:
-    def __init__(self, env):
+    def __init__(self, env:LCMAgent):
         self.env = env
 
         if isinstance(self.env.cfg, dict):
@@ -47,5 +49,5 @@ class HistoryWrapper:
         self.obs_history[:, :] = 0
         return {"obs": ret, "privileged_obs": privileged_obs, "obs_history": self.obs_history}
 
-    def __getattr__(self, name):
-        return getattr(self.env, name)
+    # def __getattr__(self, name):
+    #     return getattr(self.env, name)
