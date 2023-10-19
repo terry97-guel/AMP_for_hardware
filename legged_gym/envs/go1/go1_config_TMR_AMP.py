@@ -127,13 +127,13 @@ class Cfg( LeggedRobotCfg ):
         max_contact_force = 100. # forces above this value are penalized
         base_height_target = 0.25
         class scales( LeggedRobotCfg.rewards.scales ):
-            pos_motion     = 150 * 3
-            ang_motion     = 150 * 3
-            dof_pos_motion = 150 * 3
+            pos_motion     = 150
+            ang_motion     = 150
+            dof_pos_motion = 150
 
-            dof_vel_motion = 150
-            lin_vel_motion = 150
-            ang_vel_motion = 150
+            dof_vel_motion = 50
+            lin_vel_motion = 50
+            ang_vel_motion = 50
 
             termination = 0.0
             tracking_lin_vel = 0  
