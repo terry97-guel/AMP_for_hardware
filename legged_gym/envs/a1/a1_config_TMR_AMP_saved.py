@@ -37,8 +37,7 @@ MR = "TMR"
 RL = "AMP"
 ROBOT = "A1"
 ROBOT = ROBOT.lower()
-# MOTION_FILES = glob.glob(f'{LEGGED_GYM_ROOT_DIR}/datasets/{MOTION}/{ROBOT}/{MR}/{MOTION}_{ROBOT}_{MR}_processed/*')
-MOTION_FILES = glob.glob(f'{LEGGED_GYM_ROOT_DIR}/datasets/{MOTION}/{ROBOT}/{MR}/{MOTION}_{ROBOT}_{MR}_rollback/*')
+MOTION_FILES = glob.glob(f'{LEGGED_GYM_ROOT_DIR}/datasets/{MOTION}/{ROBOT}/{MR}/{MOTION}_{ROBOT}_{MR}_processed/*')
 
 class Cfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env ):
@@ -54,31 +53,12 @@ class Cfg( LeggedRobotCfg ):
 
     class init_state( LeggedRobotCfg.init_state ):
         pos = [0.0, 0.0, 0.42] # x,y,z [m]
-        default_joint_angles = { # = target angles [rad] when action = 0.0
-            'leg0_FL_a_hip_joint': 0.1,   # [rad]
-            'leg0_FL_c_thigh_joint': 0.8,     # [rad]
-            'leg0_FL_d_calf_joint': -1.5,   # [rad]
-
-            'leg1_FR_a_hip_joint': -0.1,  # [rad]
-            'leg1_FR_c_thigh_joint': 0.8,     # [rad]
-            'leg1_FR_d_calf_joint': -1.5,  # [rad]
-
-            'leg2_RL_a_hip_joint': 0.1,   # [rad]
-            'leg2_RL_c_thigh_joint': 1.0,   # [rad]
-            'leg2_RL_d_calf_joint': -1.5,    # [rad]
-            
-            'leg3_RR_a_hip_joint': -0.1,   # [rad]
-            'leg3_RR_c_thigh_joint': 1.0,   # [rad]
-            'leg3_RR_d_calf_joint': -1.5,    # [rad]
-        }
-
-        # pos = [0.0, 0.0, 0.50] # x,y,z [m]
         # default_joint_angles = { # = target angles [rad] when action = 0.0
-        #     'leg0_FL_a_hip_joint': 0,   # [rad]
+        #     'leg0_FL_a_hip_joint': 0.0,   # [rad]
         #     'leg0_FL_c_thigh_joint': 0.9,     # [rad]
         #     'leg0_FL_d_calf_joint': -1.8,   # [rad]
 
-        #     'leg1_FR_a_hip_joint': 0,  # [rad]
+        #     'leg1_FR_a_hip_joint': 0.0,  # [rad]
         #     'leg1_FR_c_thigh_joint': 0.9,     # [rad]
         #     'leg1_FR_d_calf_joint': -1.8,  # [rad]
 
@@ -86,10 +66,29 @@ class Cfg( LeggedRobotCfg ):
         #     'leg2_RL_c_thigh_joint': 0.9,   # [rad]
         #     'leg2_RL_d_calf_joint': -1.8,    # [rad]
             
-        #     'leg3_RR_a_hip_joint': 0.0,   # [rad]
+        #     'leg3_RR_a_hip_joint': -0.0,   # [rad]
         #     'leg3_RR_c_thigh_joint': 0.9,   # [rad]
         #     'leg3_RR_d_calf_joint': -1.8,    # [rad]
         # }
+
+        default_joint_angles = {
+            'leg0_FL_a_hip_joint': -0.15,   # [rad]
+            'leg0_FL_c_thigh_joint': 0.55,     # [rad]
+            'leg0_FL_d_calf_joint': -1.5,   # [rad]
+            
+            'leg1_FR_a_hip_joint': 0.15,  # [rad]
+            'leg1_FR_c_thigh_joint': 0.55,     # [rad]
+            'leg1_FR_d_calf_joint': -1.5,  # [rad]
+
+            'leg2_RL_a_hip_joint': -0.15,   # [rad]
+            'leg2_RL_c_thigh_joint': 0.7,   # [rad]
+            'leg2_RL_d_calf_joint': -1.5,    # [rad]
+
+            'leg3_RR_a_hip_joint': 0.15,   # [rad]
+            'leg3_RR_c_thigh_joint': 0.7,   # [rad]
+            'leg3_RR_d_calf_joint': -1.5,    # [rad]
+        }
+
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
         control_type = 'P'
@@ -204,4 +203,5 @@ class CfgPPO( LeggedRobotCfgPPO ):
 
         min_normalized_std = [0.01, 0.01, 0.01] * 4
         # resume = True
+
 
