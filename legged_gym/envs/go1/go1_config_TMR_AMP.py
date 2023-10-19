@@ -45,30 +45,30 @@ class Cfg( LeggedRobotCfg ):
         include_history_steps = None  # Number of steps of history to include.
         num_observations = 40
         num_privileged_obs = 46
-        reference_state_initialization = False
+        reference_state_initialization = True
         reference_state_initialization_prob = 0.85
         amp_motion_files = MOTION_FILES
         ee_names = ["FL_foot", "FR_foot", "RL_foot", "RR_foot"]
         get_commands_from_joystick = False
 
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.28] # x,y,z [m]
+        pos = [0.0, 0.0, 0.27] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
-            'leg0_FL_a_hip_joint': 0.0,   # [rad]
-            'leg0_FL_c_thigh_joint': 0.9,     # [rad]
-            'leg0_FL_d_calf_joint': -1.8,   # [rad]
+            'FL_hip_joint': 0.0,   # [rad]
+            'FL_thigh_joint': 0.9,     # [rad]
+            'FL_calf_joint': -1.8,   # [rad]
 
-            'leg1_FR_a_hip_joint': 0.0,  # [rad]
-            'leg1_FR_c_thigh_joint': 0.9,     # [rad]
-            'leg1_FR_d_calf_joint': -1.8,  # [rad]
+            'FR_hip_joint': 0.0,  # [rad]
+            'FR_thigh_joint': 0.9,     # [rad]
+            'FR_calf_joint': -1.8,  # [rad]
 
-            'leg2_RL_a_hip_joint': 0.0,   # [rad]
-            'leg2_RL_c_thigh_joint': 0.9,   # [rad]
-            'leg2_RL_d_calf_joint': -1.8,    # [rad]
+            'RL_hip_joint': 0.0,   # [rad]
+            'RL_thigh_joint': 0.9,   # [rad]
+            'RL_calf_joint': -1.8,    # [rad]
             
-            'leg3_RR_a_hip_joint': -0.0,   # [rad]
-            'leg3_RR_c_thigh_joint': 0.9,   # [rad]
-            'leg3_RR_d_calf_joint': -1.8,    # [rad]
+            'RR_hip_joint': -0.0,   # [rad]
+            'RR_thigh_joint': 0.9,   # [rad]
+            'RR_calf_joint': -1.8,    # [rad]
         }
 
     class control( LeggedRobotCfg.control ):
@@ -84,16 +84,18 @@ class Cfg( LeggedRobotCfg ):
     class terrain( LeggedRobotCfg.terrain ):
         mesh_type = 'plane'
         measure_heights = False
+        curriculum = False
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf'
+        file = f'{LEGGED_GYM_ROOT_DIR}/resources/robots/{ROBOT}/urdf/{ROBOT}.urdf'
         foot_name = "foot"
         penalize_contacts_on = ["thigh", "calf"]
         terminate_after_contacts_on = [
             "base", "FL_calf", "FR_calf", "RL_calf", "RR_calf",
             "FL_thigh", "FR_thigh", "RL_thigh", "RR_thigh"]
         self_collisions = 0 # 1 to disable, 0 to enable...bitwise filter
-
+        flip_visual_attachments = False
+        
     class domain_rand:
         randomize_friction = True
         friction_range = [0.25, 1.75]

@@ -84,6 +84,8 @@ def play(args):
     for repeat_n in range(100):
         for i in range(int(env.max_episode_length)):
             # env.reset()
+            # env.update()
+            
             if env.times >= env.amp_loader.trajectory_lens[0] - env.dt:
                 env.reset(random_time=False)
             actions = policy(obs.detach())
@@ -168,6 +170,6 @@ if __name__ == '__main__':
     RECORD_FRAMES = False
     MOVE_CAMERA = False
     args = get_args()
-    args.task = "go1_TMR_AMP"
+    args.task = "a1_TMR_AMP"
     # args.task = "a1_amp"
     play(args)

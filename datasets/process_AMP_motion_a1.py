@@ -22,7 +22,7 @@ from datasets.retarget_utils import *
 import numpy as np
 from legged_gym import LEGGED_GYM_ROOT_DIR
 
-ROBOT = "a1"
+ROBOT = "go1"
 ROBOT = ROBOT.lower()
 MOTION = "hopturn"
 MR_LS = ['NMR', "TMR", "SMR","STMR"]
@@ -40,7 +40,7 @@ for MR in MR_LS:
       DEFAULT_JOINT_POSE = np.array([0, 0.9, -1.8, 0, 0.9, -1.8, 0, 0.9, -1.8, 0, 0.9, -1.8])
       INIT_ROT = np.array([0, 0, 0, 1.0])
     if ROBOT == "go1":
-      INIT_POS = np.array([0, 0, 0.28])
+      INIT_POS = np.array([0, 0, 0.27])
       DEFAULT_JOINT_POSE = np.array([0, 0.9, -1.8, 0, 0.9, -1.8, 0, 0.9, -1.8, 0, 0.9, -1.8])
       INIT_ROT = np.array([0, 0, 0, 1.0])
 

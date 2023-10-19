@@ -71,6 +71,24 @@ class Cfg( LeggedRobotCfg ):
             'leg3_RR_d_calf_joint': -1.8,    # [rad]
         }
 
+        # default_joint_angles = {
+        #     'leg0_FL_a_hip_joint': -0.15,   # [rad]
+        #     'leg0_FL_c_thigh_joint': 0.55,     # [rad]
+        #     'leg0_FL_d_calf_joint': -1.5,   # [rad]
+            
+        #     'leg1_FR_a_hip_joint': 0.15,  # [rad]
+        #     'leg1_FR_c_thigh_joint': 0.55,     # [rad]
+        #     'leg1_FR_d_calf_joint': -1.5,  # [rad]
+
+        #     'leg2_RL_a_hip_joint': -0.15,   # [rad]
+        #     'leg2_RL_c_thigh_joint': 0.7,   # [rad]
+        #     'leg2_RL_d_calf_joint': -1.5,    # [rad]
+
+        #     'leg3_RR_a_hip_joint': 0.15,   # [rad]
+        #     'leg3_RR_c_thigh_joint': 0.7,   # [rad]
+        #     'leg3_RR_d_calf_joint': -1.5,    # [rad]
+        # }
+
     class control( LeggedRobotCfg.control ):
         # PD Drive parameters:
         control_type = 'P'
@@ -84,9 +102,10 @@ class Cfg( LeggedRobotCfg ):
     class terrain( LeggedRobotCfg.terrain ):
         mesh_type = 'plane'
         measure_heights = False
+        curriculum = False
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf'
+        file = f'{LEGGED_GYM_ROOT_DIR}/resources/robots/{ROBOT}/urdf/{ROBOT}.urdf'
         foot_name = "foot"
         penalize_contacts_on = ["thigh", "calf"]
         terminate_after_contacts_on = [

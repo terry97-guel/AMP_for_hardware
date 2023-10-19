@@ -52,7 +52,7 @@ class Cfg( LeggedRobotCfg ):
         get_commands_from_joystick = False
 
     class init_state( LeggedRobotCfg.init_state ):
-        pos = [0.0, 0.0, 0.28] # x,y,z [m]
+        pos = [0.0, 0.0, 0.27] # x,y,z [m]
         default_joint_angles = { # = target angles [rad] when action = 0.0
             'leg0_FL_a_hip_joint': 0.0,   # [rad]
             'leg0_FL_c_thigh_joint': 0.9,     # [rad]
@@ -87,14 +87,15 @@ class Cfg( LeggedRobotCfg ):
         measure_heights = False
 
     class asset( LeggedRobotCfg.asset ):
-        file = '{LEGGED_GYM_ROOT_DIR}/resources/robots/a1/urdf/a1.urdf'
+        file = f'{LEGGED_GYM_ROOT_DIR}/resources/robots/{ROBOT}/urdf/{ROBOT}.urdf'
         foot_name = "foot"
         penalize_contacts_on = ["thigh", "calf"]
         terminate_after_contacts_on = [
             "base", "FL_calf", "FR_calf", "RL_calf", "RR_calf",
             "FL_thigh", "FR_thigh", "RL_thigh", "RR_thigh"]
         self_collisions = 0 # 1 to disable, 0 to enable...bitwise filter
-
+        flip_visual_attachments = False
+        
     class domain_rand:
         randomize_friction = True
         friction_range = [0.25, 1.75]
