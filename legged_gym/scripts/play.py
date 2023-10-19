@@ -89,7 +89,6 @@ def play(args):
             if env.times >= env.amp_loader.trajectory_lens[0] - env.dt:
                 env.reset(random_time=False)
             actions = policy(obs.detach())
-            actions = torch.zeros_like(actions)
             obs, _, rews, dones, infos, _, _ = env.step(actions.detach(), RESET_ABLED=False)
                         
             # default_joint_angles = [] 
